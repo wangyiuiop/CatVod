@@ -1,6 +1,7 @@
 
 {
-  "sites": [ {
+  "sites": [
+   {
       "key": "csp_SP360",
       "name": "🎾360(SP)",
       "type": 3,
@@ -20,9 +21,9 @@
     },
     {
       "key": "csp_LiteApple",
-      "name": "🍎小苹果(SP)",
+      "name": "🍎小苹果(V2)",
       "type": 3,
-      "api": "csp_LiteApple",
+      "api": "csp_AppYsV2",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
@@ -48,7 +49,7 @@
     },
     {
       "key": "csp_Cokemv",
-      "name": "🐼Cokemv(SP)",
+      "name": "🐞Cokemv(SP)",
       "type": 3,
       "api": "csp_Cokemv",
       "searchable": 1,
@@ -130,7 +131,7 @@
     },
     {
       "key": "csp_Mjxq",
-      "name": "🐞美剧星球",
+      "name": "🏀美剧星球(SP)",
       "type": 3,
       "api": "csp_Mjxq",
       "searchable": 1,
@@ -139,7 +140,7 @@
     },
     {
       "key": "csp_Gitcafe",
-      "name": "小纸条",
+      "name": "📃小纸条",
       "type": 3,
       "api": "csp_Gitcafe",
       "searchable": 1,
@@ -168,7 +169,7 @@
     },
     {
       "key": "Libvio",
-      "name": "🐼Libvio",
+      "name": "🐼Libvio(SP)",
       "type": 3,
       "api": "csp_Lib",
       "searchable": 1,
@@ -237,13 +238,23 @@
     },
     {
       "key": "csp_biubiu_lezhu",
-      "name": "乐猪(XB)",
+      "name": "乐猪影视(XB)",
       "type": 3,
       "api": "csp_XBiubiu",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
       "ext": "https://kvymin.github.io/CatVod/XBiubiu/lezhutv.json"
+    },
+    {
+      "key":"csp_biubiu_dmxq",
+      "name":"🍚大米星球(XB)",
+      "type":3,
+      "api":"csp_XBiubiu",
+      "searchable":1,
+      "quickSearch":1,
+      "filterable":0,
+      "ext":"https://kvymin.github.io/CatVod/XBiubiu/dmxq.json"
     },
     {
       "key": "789看片",
