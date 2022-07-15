@@ -46,26 +46,6 @@
       "filterable": 1
     },
     {
-      "key": "旋风",
-      "name": "旋风〔EXO〕",
-      "type": 1,
-      "api": "http://appimg.ssxmall.cn/api.php/provide/vod/",
-      "playUrl": "json:https://svip.iepig.com:4443/api/?key=SicQs2pG0Cw7BnWV9a&url=",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1
-    },
-    {
-      "key":"多多",
-      "name":"多多〔EXO〕",
-      "type":1,
-      "api":"https://a.7dyu.cn/api.php/provide/vod/from/ddzy/",
-      "playUrl":"json:http://qiqi.520say.cn/json/dd.php?url=",
-      "searchable":1,
-      "filterable":1,
-      "categories":[ ]
-    },
-    {
       "key": "极速",
       "name": "极速〔聚〕",
       "type": 1,
@@ -130,6 +110,16 @@
       "ext": "https://kvymin.github.io/CatVod/XPathMacFilter/Gimy.json"
     },
     {
+      "key":"csp_xpath_zxzj",
+      "name":"在线之家(XPF)",
+      "type":3,
+      "api":"csp_XPathFilter",
+      "searchable":1,
+      "quickSearch":1,
+      "filterable":1,
+      "ext":"https://kvymin.github.io/CatVod/XPathFilter/zxzj.json"
+    },
+    {
       "key": "csp_xpath_ddg",
       "name": "达达龟〔XPF〕",
       "type": 3,
@@ -174,39 +164,33 @@
   ],
   "parses": [
     {
-      "name": "LTRX",
+      "name": "云you解析2",
       "type": 1,
-      "url": "https://svip.spchat.top/api/?type=ys&key=bKemW41JnxmQb4l67h&url=",
+      "url": "https://maoyingshi.cc/api.php?url=",
       "ext": {
-        "flag": [
-          "rx"
-        ]
+        "flag": ["qq","qiyi","mgtv","youku","letv","sohu","xigua","1905"],
+        "header": {
+          "User-Agent": "Dart/2.14 (dart:io)"
+        }
       }
     },
     {
-      "name": "王牌",
+      "name":"16",
+      "type":1,
+      "url":"https://jhjx.kuanjv.com/newky/?url="
+    },
+    {
+    "name": "fuqi",
+    "type": 1,
+    "url": "https://play.fuqizhishi.com/maotv/API.php?appkey=QQ172598364&url="
+    },
+    {
+      "name": "leduo",
       "type": 1,
-      "url": "https://za.kuanjv.com/?url=",
+      "url": "https://api.ldjx.cc/wp-api/getvodurl.php?token=1001&vid=",
       "ext": {
         "flag": [
-          "qq",
-          "腾讯",
-          "qiyi",
-          "爱奇艺",
-          "奇艺",
-          "youku",
-          "优酷",
-          "mgtv",
-          "芒果",
-          "搜狐",
-          "sohu",
-          "letv",
-          "乐视",
-          "bilibili",
-          "哔哩哔哩",
-          "哔哩",
-          "xigua",
-          "西瓜"
+          "leduo"
         ]
       }
     }
