@@ -45,8 +45,16 @@
       "quickSearch": 1,
       "filterable": 1
     },
+    {
+     "key":"csp_xml_木子看剧",
+     "name":"🐝木子看剧",
+     "type":1,
+     "api":"https://mzkj.maccms.cf/api.php/provide/vod/",
+     "searchable":1,
+     "quickSearch":1
+    },
     { 
-     "key": "多多",
+      "key": "多多",
       "name": "多多〔切片〕",
       "type": 1,
       "api": "https://a.7dyu.cn/api.php/provide/vod/from/ddzy/",
@@ -65,6 +73,14 @@
       "quickSearch": 1,
       "filterable": 1
     },
+    {
+      "key":"快车资源",
+      "name":"快车资源(切)",
+      "type":1,
+      "api":"https://caiji.kczyapi.com/api.php/provide/vod/",
+      "searchable":1,
+      "quickSearch":1
+    },
     {   
       "key":"红牛",
       "name":"红牛〔聚〕",
@@ -74,6 +90,30 @@
       "searchable": 1,
       "filterable": 1,
       "categories":[]
+    },
+    {
+      "key":"6U资源",
+      "name":"6U资源(官)",
+      "type":1,
+      "api":"http://www.6uzy.cc/inc/apijson_vod.php",
+      "searchable":0,
+      "quickSearch":0
+    },
+    {
+      "key":"土狗2345",
+      "name":"土狗2345(官)",
+      "type":1,
+      "api":"http://2345.tgzy.cc/api.php/provide/vod/",
+      "searchable":1,
+      "quickSearch":1
+    },
+    {
+      "key":"土狗360",
+      "name":"土狗360(官)",
+      "type":1,
+      "api":"http://360.tgzy.cc/api.php/provide/vod/",
+      "searchable":1,
+      "quickSearch":1
     },
     {
       "key": "极速",
@@ -193,105 +233,25 @@
     }
   ],
   "parses": [
-
     {
-      "name": "293",
-      "type": "1",
-      "url": "http://81.71.48.249:4433/iphone/100.php?url=",
-      "ext": {
-        "flag": [
-          "qq",
-          "qiyi",
-          "mgtv",
-          "youku",
-          "letv",
-          "sohu",
-          "xigua",
-          "1905"
-        ],
-        "header": {
-          "User-Agent": "Dalvik/2.1.0"
-        }
-      }
+      "name": "解析聚合",
+      "type": 3,
+      "url": "Demo"
     },
     {
-      "name":"①秒播",
-      "type":1,
-      "url":"https://jx.hfyrw.com/mao.go?url="
+      "name": "Json并发",
+      "type": 2,
+      "url": "Parallel"
     },
     {
-      "name":"②秒播",
-      "type":1,
-      "url":"http://27.124.4.42:4567/jhjson/ceshi.php?url=",
-      "ext":
-         {
-           "flag":["qiyi","qq","letv","sohu","youku","mgtv","bilibili","wasu","xigua","1905"]
-         }
+      "name": "Json轮询",
+      "type": 2,
+      "url": "Sequence"
     },
-    {
-      "name":"云you解析",
-      "type":1,
-      "url":"https://ax.jx.cn/api.php?url="
-    },
-    {
-      "name": "云you解析2",
-      "type": 1,
-      "url": "https://maoyingshi.cc/api.php?url=",
-      "ext": {
-        "flag": ["qq","qiyi","mgtv","youku","letv","sohu","xigua","1905"],
-        "header": {
-          "User-Agent": "Dart/2.14 (dart:io)"
-        }
-      }
-    },
-    {
-      "name": "Web解析",
-      "type": 0,
-      "url": "https://chaxun.truechat365.com/?url=",
-      "ext": {
-        "flag": [
-          "youku",
-          "优酷",
-          "mgtv",
-          "芒果",
-          "qq",
-          "腾讯",
-          "qiyi",
-          "爱奇艺",
-          "qq",
-          "奇艺"
-        ]
-      }
-    },
-    {
-      "name":"左岸",
-      "type":1,
-      "url":"http://110.42.2.115:880/analysis/json/?uid=2100&my=fgjnoqstLMRUZ03489&url=",
-      "ext":
-        {
-         "flag":["qq","qiyi","mgtv","youku","letv","sohu","xigua","1905"]
-        }
-    },
-    {
-      "name":"16",
-      "type":1,
-      "url":"https://jhjx.kuanjv.com/newky/?url="
-    },
-    {
-      "name": "fuqi",
-      "type": 1,
-      "url": "https://play.fuqizhishi.com/maotv/API.php?appkey=QQ172598364&url="
-    },
-    {
-      "name": "leduo",
-      "type": 1,
-      "url": "https://api.ldjx.cc/wp-api/getvodurl.php?token=1001&vid=",
-      "ext": {
-        "flag": [
-          "leduo"
-        ]
-      }
-    }
+    {"name":"左岸","type":1,"url":"http://110.42.2.115:880/analysis/json/?uid=2100&my=fgjnoqstLMRUZ03489&url=","ext":{"flag":["qq","qiyi","mgtv","youku","letv","sohu","xigua","1905","优播线路","腾播线路"],"header":{"User-Agent":"Dart/2.14 (dart:io)"}}},
+    {"name":"未知","type":1,"url":"http://106.52.218.221:88/?url=","ext":{"flag":["qq","腾讯","qiyi","爱奇艺","奇艺","youku","优酷","mgtv","芒果","letv","乐视","pptv","PPTV","sohu","bilibili","哔哩哔哩","哔哩"]}},
+    {"name":"parwix1","type":0,"url":"https://jx.parwix.com:4433/player/?url=","ext":{"flag":["qq","腾讯","qiyi","爱奇艺","奇艺","youku","优酷","mgtv","芒果","letv","乐视","pptv","PPTV","sohu","bilibili","哔哩哔哩","哔哩"]}}, 
+    {"name":"parwix2","type":0,"url":"https://jx.parwix.com:4433/player/analysis.php?v=","ext":{"flag":["qq","腾讯","qiyi","爱奇艺","奇艺","youku","优酷","mgtv","芒果","letv","乐视","pptv","PPTV","sohu","bilibili","哔哩哔哩","哔哩"]}}
   ],
   "flags": [
     "youku",
