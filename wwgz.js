@@ -281,8 +281,8 @@ var rule = {
         ],
         26: [],
     },
-    class_name: '电影&连续剧&综艺&动漫&短剧',
-    class_url: '1&2&3&4&26',
+    class_name: '电影&amp;连续剧&amp;综艺&amp;动漫&amp;短剧',
+    class_url: '1&amp;2&amp;3&amp;4&amp;26',
     lazy: 'js',
     timeout: 20000,
     play_parse: true
@@ -554,4 +554,3 @@ async function search(wd, quick) {
     })
     return JSON.stringify({ list: videos })
 }
-
