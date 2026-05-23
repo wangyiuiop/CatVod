@@ -8,6 +8,9 @@ async function request(reqUrl, postData = null) {
         'User-Agent': ua,
         'Referer': HOST + '/'
     }
+    if (postData) {
+        headers['Content-Type'] = 'application/x-www-form-urlencoded'
+    }
     let res = await req(reqUrl, {
         method: postData ? 'post' : 'get',
         headers: headers,
