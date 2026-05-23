@@ -1,11 +1,5 @@
-import { Crypto, load, _ } from 'assets://js/lib/cat.js';
-
 const HOST = 'https://vip.wwgz.cn:5200';
-const UA =
-    'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1';
-
-let siteKey = '';
-let siteType = '';
+const UA = 'Mozilla/5.0 (Linux; Android 13; M2102J2SC Build/TKQ1.221114.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/145.0.7632.7 Mobile Safari/537.36';
 
 async function request(url, data = null) {
     const res = await req(url, {
@@ -17,424 +11,229 @@ async function request(url, data = null) {
         },
         data,
     });
-
     return res.content || '';
 }
 
 function fixUrl(url) {
     if (!url) return '';
-
     if (url.startsWith('//')) {
         return 'https:' + url;
     }
-
     if (url.startsWith('/')) {
         return HOST + url;
     }
-
     return url;
 }
 
-function parseVodList($, selector) {
-    const list = [];
-
-    $(selector).each((_, el) => {
-        const $el = $(el);
-
-        // 尝试找到包含 vod-detail-id 的链接
-        let $a = $el.find('a[href*="/vod-detail-id-"]');
-        
-        // 如果直接找不到，就找第一个链接
-        if (!$a.length) {
-            $a = $el.find('a').first();
+function getList(html) {
+    let videos = [];
+    let selector = '';
+    if (html.includes('class="globalPicList"')) selector = '.globalPicList&&li';
+    else if (html.includes('class="ulPicTxt')) selector = '.ulPicTxt&&li';
+    if (!selector) return videos;
+    let items = pdfa(html, selector);
+    items.forEach(it => {
+        let idMatch = it.match(/href="(.*?)"/);
+        let nameMatch = it.match(/<span class="sTit">(.*?)<\/span>/);
+        let picMatch = it.match(/data-src="(.*?)"/) || it.match(/src="(.*?)"/);
+        let remarksMatch = it.match(/<span>([\s\S]*?)<em>/) || it.match(/<span class="sStyle">([\s\S]*?)<\/span>/);
+        if (idMatch && nameMatch) {
+            let pic = picMatch ? (picMatch[1] || picMatch[2]) : "";
+            videos.push({
+                vod_id: idMatch[1],
+                vod_name: nameMatch?.[1]?.trim() || "未知片名",
+                vod_pic: pic.startsWith('/') ? HOST + pic : fixUrl(pic),
+                vod_remarks: remarksMatch?.[1]?.trim() || "未提供"
+            });
         }
-
-        if (!$a.length) return;
-
-        const href = $a.attr('href') || '';
-
-        // 从链接中提取视频ID
-        const vodIdMatch = href.match(/vod-detail-id-(\d+)/);
-        if (!vodIdMatch) return;
-        const vodId = vodIdMatch[1];
-
-        // 获取图片地址
-        let vodPic = '';
-        const $img = $el.find('img').first();
-        if ($img.length) {
-            vodPic = $img.attr('data-src') || $img.attr('data-echo') || $img.attr('src') || '';
-        }
-        vodPic = fixUrl(vodPic);
-
-        // 获取视频名称
-        let vodName = $a.attr('title') || '';
-        if (!vodName) {
-            const $sTit = $el.find('.sTit');
-            if ($sTit.length) {
-                vodName = $sTit.text().trim();
-            }
-        }
-        if (!vodName) {
-            vodName = $el.text().trim().split('\n')[0] || '';
-        }
-
-        // 获取备注信息
-        let vodRemarks = '';
-        const $sDes = $el.find('.sDes');
-        if ($sDes.length) {
-            vodRemarks = $sDes.text().trim();
-        }
-        if (!vodRemarks) {
-            const $remarks = $el.find('.remarks');
-            if ($remarks.length) {
-                vodRemarks = $remarks.text().trim();
-            }
-        }
-
-        list.push({
-            vod_id: vodId,
-            vod_name: vodName,
-            vod_pic: vodPic,
-            vod_remarks: vodRemarks,
-        });
     });
-
-    return list;
-}
-
-function getFilters() {
-    const years = [{ n: '全部', v: '0' }];
-
-    for (let i = 2026; i >= 2018; i--) {
-        years.push({
-            n: String(i),
-            v: String(i),
-        });
-    }
-
-    return {
-        '1': [
-            {
-                key: 'by',
-                name: '排序',
-                value: [
-                    { n: '时间', v: 'time' },
-                    { n: '人气', v: 'hits' },
-                    { n: '评分', v: 'score' },
-                ],
-            },
-            {
-                key: 'area',
-                name: '地区',
-                value: [
-                    { n: '全部', v: '' },
-                    { n: '大陆', v: '大陆' },
-                    { n: '香港', v: '香港' },
-                    { n: '台湾', v: '台湾' },
-                    { n: '美国', v: '美国' },
-                    { n: '韩国', v: '韩国' },
-                    { n: '日本', v: '日本' },
-                ],
-            },
-            {
-                key: 'year',
-                name: '年代',
-                value: years,
-            },
-        ],
-        '2': [
-            {
-                key: 'by',
-                name: '排序',
-                value: [
-                    { n: '时间', v: 'time' },
-                    { n: '人气', v: 'hits' },
-                    { n: '评分', v: 'score' },
-                ],
-            },
-            {
-                key: 'year',
-                name: '年代',
-                value: years,
-            },
-        ],
-        '3': [
-            {
-                key: 'by',
-                name: '排序',
-                value: [
-                    { n: '时间', v: 'time' },
-                    { n: '人气', v: 'hits' },
-                ],
-            },
-        ],
-        '4': [
-            {
-                key: 'by',
-                name: '排序',
-                value: [
-                    { n: '时间', v: 'time' },
-                    { n: '人气', v: 'hits' },
-                ],
-            },
-        ],
-        '26': [
-            {
-                key: 'by',
-                name: '排序',
-                value: [
-                    { n: '时间', v: 'time' },
-                    { n: '人气', v: 'hits' },
-                ],
-            },
-        ],
-    };
+    return videos;
 }
 
 async function init(cfg) {
-    siteKey = cfg.skey;
-    siteType = cfg.stype;
 }
 
 async function home(filter) {
+    let classes = [
+        { "type_id": "1", "type_name": "电影" },
+        { "type_id": "2", "type_name": "剧集" },
+        { "type_id": "3", "type_name": "综艺" },
+        { "type_id": "4", "type_name": "动漫" },
+        { "type_id": "26", "type_name": "短剧" }
+    ];
+    
+    let common_areas = ["全部", "大陆", "香港", "台湾", "美国", "韩国", "日本", "泰国", "新加坡", "马来西亚", "印度", "英国", "法国", "加拿大", "西班牙", "俄罗斯", "其它"];
+    let common_years = ["全部", "2026", "2025", "2024", "2023", "2022", "2021", "2020", "2019", "2018", "2017", "2016", "2015", "2014", "2013", "2012"];
+    
+    let area_values = common_areas.map(a => ({ "n": a, "v": a === "全部" ? "" : a }));
+    let year_values = common_years.map(y => ({ "n": y, "v": y === "全部" ? "0" : y }));
+    let by_values = [
+        { "n": "时间", "v": "-by-time" },
+        { "n": "人气", "v": "-by-hits" },
+        { "n": "评分", "v": "-by-score" }
+    ];
+
+    let movie_sub_classes = [
+        { "n": "全部类型", "v": "1" },
+        { "n": "动作片", "v": "5" },
+        { "n": "喜剧片", "v": "6" },
+        { "n": "爱情片", "v": "7" },
+        { "n": "科幻片", "v": "8" },
+        { "n": "恐怖片", "v": "9" },
+        { "n": "剧情片", "v": "10" },
+        { "n": "战争片", "v": "11" },
+        { "n": "惊悚片", "v": "16" },
+        { "n": "奇幻片", "v": "17" }
+    ];
+
+    let tv_sub_classes = [
+        { "n": "全部", "v": "2" },
+        { "n": "国产剧", "v": "12" },
+        { "n": "港台泰", "v": "13" },
+        { "n": "日韩剧", "v": "14" },
+        { "n": "欧美剧", "v": "15" }
+    ];
+
+    let variety_sub_classes = [
+        { "n": "全部", "v": "3" }
+    ];
+
+    let anime_sub_classes = [
+        { "n": "全部", "v": "4" }
+    ];
+
+    let short_sub_classes = [
+        { "n": "全部", "v": "26" }
+    ];
+
+    let filter_dict = {};
+    classes.forEach(c => {
+        let f = [];
+        let sub_classes = [];
+        
+        if (c.type_id === "1") {
+            sub_classes = movie_sub_classes;
+        } else if (c.type_id === "2") {
+            sub_classes = tv_sub_classes;
+        } else if (c.type_id === "3") {
+            sub_classes = variety_sub_classes;
+        } else if (c.type_id === "4") {
+            sub_classes = anime_sub_classes;
+        } else if (c.type_id === "26") {
+            sub_classes = short_sub_classes;
+        } else {
+            sub_classes = [{ "n": "全部", "v": c.type_id }];
+        }
+
+        f.push({ "key": "class", "name": "类型", "value": sub_classes });
+        f.push({ "key": "area", "name": "地区", "value": area_values });
+        f.push({ "key": "year", "name": "年代", "value": year_values });
+        f.push({ "key": "by", "name": "排序", "value": by_values });
+        
+        filter_dict[c.type_id] = f;
+    });
+
     return JSON.stringify({
-        class: [
-            { type_id: '1', type_name: '电影' },
-            { type_id: '2', type_name: '连续剧' },
-            { type_id: '3', type_name: '综艺' },
-            { type_id: '4', type_name: '动漫' },
-            { type_id: '26', type_name: '短剧' },
-        ],
-        filters: getFilters(),
+        "class": classes,
+        "filters": filter_dict
     });
 }
 
 async function homeVod() {
     const html = await request(HOST);
-
-    const $ = load(html);
-
-    const list = parseVodList($, 'section.mod li');
-
     return JSON.stringify({
-        list: list.slice(0, 40),
+        list: getList(html)
     });
 }
 
 async function category(tid, pg, filter, extend) {
-    pg = pg || 1;
-
-    const by = extend.by || 'time';
-    const area = extend.area || '';
-    const year = extend.year || '0';
-
-    const url =
-        HOST +
-        `/index.php?m=vod-list-id-${tid}-pg-${pg}-order--by-${by}-class-0-year-${year}-letter--area-${encodeURIComponent(area)}-lang-.html`;
-
+    let p = pg || 1;
+    
+    let targetId = (extend && extend.class) ? extend.class : tid;
+    let by = (extend && extend.by) ? extend.by : '-by-time';
+    let year = (extend && extend.year) ? extend.year : '0';
+    let area = (extend && extend.area) ? encodeURIComponent(extend.area) : '';
+    
+    let url = `${HOST}/vod-list-id-${targetId}-pg-${p}-order-${by}-class-0-year-${year}-letter--area-${area}-lang-.html`;
+    
     const html = await request(url);
-
-    const $ = load(html);
-
-    const list = parseVodList($, 'ul.resize_list li');
-
-    const pageText = $('body').text();
-
-    const total =
-        parseInt(pageText.match(/共(\d+)条数据/)?.[1] || '0');
-
-    const pagecount =
-        parseInt(pageText.match(/当前:\d+\/(\d+)页/)?.[1] || '1');
-
     return JSON.stringify({
-        page: parseInt(pg),
-        pagecount: pagecount,
-        limit: 30,
-        total: total,
-        list,
+        list: getList(html),
+        page: parseInt(p)
     });
 }
 
 async function detail(id) {
-    const html = await request(
-        HOST + `/vod-detail-id-${id}.html`
-    );
+    const dUrl = HOST + id;
+    const dhtml = await request(dUrl);
+    const playPageUrl = pdfh(dhtml, '.page-btn a.greenBtn&&href');
+    if (!playPageUrl) {
+        return JSON.stringify({
+            list: []
+        });
+    }
+    const phtml = await request(HOST + playPageUrl);
+    
+    let playFrom = phtml.match(/mac_from='([\s\S]*?)'/)?.[1] ?? '';
+    let playUrl = phtml.match(/mac_url='([\s\S]*?)'/)?.[1] ?? '';
 
-    const $ = load(html);
-
-    const title =
-        $('h1.title').text().trim() ||
-        $('title').text().trim();
-
-    let vodPic =
-        $('section.page-hd img').attr('src') ||
-        $('img').first().attr('src') ||
-        '';
-
-    vodPic = fixUrl(vodPic);
-
-    const vodContent =
-        $('article.detail-con p').text().trim() ||
-        $('.content').text().trim() ||
-        '';
-
-    let vodActor = '';
-    let vodDirector = '';
-    let vodYear = '';
-
-    $('.desc_item').each((_, el) => {
-        const text = $(el).text();
-
-        if (text.includes('主演')) {
-            vodActor = text.replace('主演:', '').trim();
+    let targetPlayUrl = '';
+    if (playFrom && playUrl) {
+        let froms = playFrom.split('$$$');
+        let urls = playUrl.split('$$$');
+        
+        const linePriority = ['uvw', 'lzm3u8'];
+        
+        for (let line of linePriority) {
+            for (let i = 0; i < froms.length; i++) {
+                let currentLine = froms[i].trim();
+                if (currentLine === line && urls[i]) {
+                    targetPlayUrl = urls[i].trim();
+                    break;
+                }
+            }
+            if (targetPlayUrl) break;
         }
-
-        if (text.includes('导演')) {
-            vodDirector = text.replace('导演:', '').trim();
+        
+        if (!targetPlayUrl && urls.length > 0) {
+            targetPlayUrl = urls[0].trim();
         }
-
-        if (text.includes('年代')) {
-            vodYear = text.match(/\d{4}/)?.[0] || '';
-        }
-    });
-
-    const playMap = {};
-
-    $('.numList').each((i, el) => {
-        const from =
-            $('.play_source_tab a').eq(i).text().trim() ||
-            `线路${i + 1}`;
-
-        playMap[from] = [];
-
-        $(el)
-            .find('a')
-            .each((_, a) => {
-                const name = $(a).text().trim();
-
-                const href = $(a).attr('href') || '';
-
-                playMap[from].push(name + '$' + href);
-            });
-    });
-
-    const vod = {
-        vod_id: id,
-        vod_name: title,
-        vod_pic: vodPic,
-        vod_actor: vodActor,
-        vod_director: vodDirector,
-        vod_year: vodYear,
-        vod_content: vodContent,
-        vod_play_from: _.keys(playMap).join('$$$'),
-        vod_play_url: _.values(playMap)
-            .map((e) => e.join('#'))
-            .join('$$$'),
-    };
+    }
 
     return JSON.stringify({
-        list: [vod],
+        list: [{
+            vod_id: id,
+            vod_name: (dhtml.match(/<h1 class="title">[\s\S]*?title="[\s\S]*?">([\s\S]*?)<\/a>/) || ['', ''])[1],
+            vod_pic: (dhtml.match(/<img src="([\s\S]*?)"/) || ["", ""])[1],
+            vod_year: (dhtml.match(/年代：[\s\S]*?<em>([\s\S]*?)<\/em>/) || ['', ''])[1],
+            vod_remarks: (dhtml.match(/red">([\s\S]*?)<\/font>/) || ['', ''])[1],
+            vod_actor: Array.from(
+                dhtml.match(/主演:([\s\S]*?)<\/div>/)?.[1]?.matchAll(/<a [^>]*>([^<]+)<\/a>/g) || []
+            ).map(m => m[1]).join(' / ') || '',
+            vod_director: Array.from(
+                dhtml.match(/导演:([\s\S]*?)<\/div>/)?.[1]?.matchAll(/<a [^>]*>([^<]+)<\/a>/g) || []
+            ).map(m => m[1]).join(' / ') || '',
+            vod_content: (dhtml.match(/<p>([\s\S]*?)<\/p>/) || ['', ''])[1].replace(/<.*?>/g, '').replace("简&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;介：", ""),
+            vod_play_from: '蓝光',
+            vod_play_url: targetPlayUrl
+        }]
     });
 }
 
-function decodeBase64(str) {
-    try {
-        return Crypto.enc.Utf8.stringify(
-            Crypto.enc.Base64.parse(str)
-        );
-    } catch (e) {
-        return str;
-    }
+async function search(wd, quick, pg) {
+    const html = await request(HOST + '/index.php?m=vod-search', 'wd=' + encodeURIComponent(wd));
+    return JSON.stringify({
+        list: getList(html)
+    });
 }
 
 async function play(flag, id, flags) {
-    const playUrl = HOST + id;
-
-    const html = await request(playUrl);
-
-    let player = html.match(/player_aaaa\s*=\s*(\{.*?\})</);
-
-    if (!player) {
-        player = html.match(/r player_aaaa=(\{.*?\})/);
-    }
-
-    if (!player) {
-        return JSON.stringify({
-            parse: 1,
-            url: playUrl,
-        });
-    }
-
-    let data = {};
-
-    try {
-        data = JSON.parse(player[1]);
-    } catch (e) {}
-
-    let url = data.url || '';
-
-    if (data.encrypt == '1') {
-        url = unescape(url);
-    } else if (data.encrypt == '2') {
-        url = unescape(decodeBase64(url));
-    }
-
-    if (
-        url.includes('.m3u8') ||
-        url.includes('.mp4')
-    ) {
-        return JSON.stringify({
-            parse: 0,
-            url,
-            header: {
-                'User-Agent': UA,
-                'Referer': HOST + '/',
-            },
-        });
-    }
-
     return JSON.stringify({
         parse: 1,
-        url,
+        url: `https://api.nmvod.me:520/player/?url=${id}`,
         header: {
-            'User-Agent': UA,
-            'Referer': HOST + '/',
-        },
-    });
-}
-
-async function search(wd, quick) {
-    const html = await request(
-        HOST + '/index.php?m=vod-search',
-        'wd=' + encodeURIComponent(wd)
-    );
-
-    const $ = load(html);
-    const list = [];
-    
-    // 使用正确的选择器解析搜索结果
-    $('#search_main ul li').each((_, element) => {
-        const $element = $(element);
-        const href = $element.find('.pic a').attr('href');
-        const title = $element.find('.sTit').text().trim();
-        const cover = $element.find('img').attr('data-src');
-        const subTitle = $element.find('.sStyle').text().trim();
-        
-        if (href && title) {
-            const vodIdMatch = href.match(/vod-detail-id-(\d+)/);
-            const vodId = vodIdMatch ? vodIdMatch[1] : href;
-            
-            list.push({
-                vod_id: vodId,
-                vod_name: title,
-                vod_pic: fixUrl(cover),
-                vod_remarks: subTitle || '',
-            });
+            'User-Agent': UA
         }
-    });
-
-    return JSON.stringify({
-        list,
     });
 }
 
@@ -445,7 +244,7 @@ export function __jsEvalReturn() {
         homeVod,
         category,
         detail,
-        play,
         search,
+        play
     };
 }
