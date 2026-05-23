@@ -89,7 +89,34 @@ async function category(tid, pg, filter, extend) {
     const year = extend.year || '';
     const letter = extend.letter || '';
     const by = extend.by || '';
-    const link = HOST + '/vodshow/' + cateId + '-' + area + '-' + lang + '-' + year + '-' + letter + '-' + by + '---' + pg + '---/';
+    
+    // 根据实际浏览器测试，URL是固定长度的连字符分隔格式:
+    // 结构：分类-地区-排序-空-空-空-空-空-分页-空-空-年份
+    // 实际测试的示例：
+    // 第一页电影默认: /vodshow/1-----------/
+    // 第二页电影默认: /vodshow/1--------2---/
+    // 人气排序第一页: /vodshow/1--hits---------/
+    // 动作片+大陆+人气排序+2025: /vodshow/6-%E5%A4%A7%E9%99%86-hits---------2025/
+    // 
+    // 我们需要构建一个12段的数组，然后用连字符连接
+    const parts = [
+        cateId,  // 0: 分类ID
+        area ? encodeURIComponent(area) : '',  // 1: 地区
+        by || '',  // 2: 排序
+        '',  // 3: 保留
+        '',  // 4: 保留
+        '',  // 5: 保留
+        '',  // 6: 保留
+        '',  // 7: 保留
+        pg > 1 ? pg : '',  // 8: 分页
+        '',  // 9: 保留
+        '',  //10: 保留
+        year || '',  //11: 年份
+    ];
+    
+    const path = parts.join('-') + '/';
+    
+    const link = HOST + '/vodshow/' + path;
     const html = await request(link);
     const $ = load(html);
     const items = $('a.module-poster-item.module-item');
