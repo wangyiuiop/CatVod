@@ -223,43 +223,85 @@ async function play(flag, id, flags) {
     
     // 从页面中提取mac_url变量
     let macUrl = '';
-    let macFrom = '';
     const $scripts = $('script');
     
     $scripts.each((i, script) => {
         const text = $(script).html() || '';
         if (text.includes("mac_url=")) {
-            // 匹配 mac_url='...' 或 mac_url="..."
             const match = text.match(/mac_url\s*=\s*['"]([^'"]+)['"]/);
             if (match) {
                 macUrl = match[1];
             }
         }
-        if (text.includes("mac_from=")) {
-            const match = text.match(/mac_from\s*=\s*['"]([^'"]+)['"]/);
-            if (match) {
-                macFrom = match[1];
-            }
-        }
     });
     
     // 如果macUrl以$开头，需要分割
-    let videoUrl = macUrl;
+    let encryptUrl = macUrl;
     if (macUrl.includes('$')) {
         const parts = macUrl.split('$');
-        videoUrl = parts[1] || parts[0]; // 取$后面的部分
+        encryptUrl = parts[1] || parts[0];
     }
     
-    // 返回iframe播放器URL，让TVBox加载外部播放器
-    const playerUrl = 'https://api.nmvod.me:520/player/?url=' + encodeURIComponent(videoUrl);
+    // 解密视频URL
+    let videoUrl = decryptVideoUrl(encryptUrl);
     
+    // 如果解密失败，回退到iframe方式
+    if (!videoUrl) {
+        videoUrl = 'https://api.nmvod.me:520/player/?url=' + encodeURIComponent(encryptUrl);
+        return JSON.stringify({
+            parse: 1,
+            url: videoUrl,
+            header: {
+                'User-Agent': UAMobile,
+                'Referer': HOST + '/',
+            }
+        });
+    }
+    
+    // 返回直接可用的m3u8 URL
     return JSON.stringify({
-        parse: 1,
-        url: playerUrl,
+        parse: 0,
+        url: videoUrl,
         header: {
             'User-Agent': UAMobile,
+            'Referer': 'https://play.svip30.tv/',
         }
     });
+}
+
+// 解密视频URL函数
+function decryptVideoUrl(encryptedUrl) {
+    try {
+        // 从偏移1开始尝试解密
+        for (let offset = 1; offset < 20; offset++) {
+            try {
+                const testStr = encryptedUrl.substring(offset);
+                const decoded = Buffer.from(testStr, 'base64').toString('utf8');
+                
+                if (decoded.includes('.m3u8')) {
+                    // 提取目录ID
+                    const dirMatch = decoded.match(/(\d+)\/dy\//);
+                    if (!dirMatch) continue;
+                    const dirId = dirMatch[1];
+                    
+                    // 提取m3u8文件名
+                    const fileMatch = decoded.match(/\/dy\/([^?\s"']+\.m3u8)/);
+                    if (!fileMatch) continue;
+                    let m3u8File = fileMatch[1];
+                    // 清理特殊字符
+                    m3u8File = m3u8File.replace(/[^\w\-\/.\u4e00-\u9fa5]/g, '');
+                    
+                    // 构造完整URL
+                    return 'https://play.svip30.tv/' + dirId + '/dy/' + m3u8File;
+                }
+            } catch (e) {
+                // 忽略错误继续尝试
+            }
+        }
+        return null;
+    } catch (e) {
+        return null;
+    }
 }
 
 async function search(wd, quick) {
