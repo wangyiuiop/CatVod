@@ -8,13 +8,25 @@ let siteType = 0;
 
 const UAMobile = 'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1';
 
-async function request(reqUrl) {
-    let res = await req(reqUrl, {
-        method: 'get',
-        headers: {
-            'User-Agent': UAMobile,
-        },
-    });
+async function request(reqUrl, postData = null) {
+    let res;
+    if (postData) {
+        res = await req(reqUrl, {
+            method: 'post',
+            headers: {
+                'User-Agent': UAMobile,
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            data: postData,
+        });
+    } else {
+        res = await req(reqUrl, {
+            method: 'get',
+            headers: {
+                'User-Agent': UAMobile,
+            },
+        });
+    }
     return res.content;
 }
 
@@ -61,9 +73,6 @@ async function home(filter) {
                     {'n':'马来西亚','v':'马来西亚'},
                     {'n':'英国','v':'英国'},
                     {'n':'法国','v':'法国'},
-                    {'n':'加拿大','v':'加拿大'},
-                    {'n':'西班牙','v':'西班牙'},
-                    {'n':'俄罗斯','v':'俄罗斯'},
                     {'n':'其它','v':'其它'}
                 ]
             },
@@ -104,9 +113,7 @@ async function home(filter) {
                     {'n':'台湾','v':'台湾'},
                     {'n':'美国','v':'美国'},
                     {'n':'韩国','v':'韩国'},
-                    {'n':'日本','v':'日本'},
-                    {'n':'英国','v':'英国'},
-                    {'n':'泰国','v':'泰国'}
+                    {'n':'日本','v':'日本'}
                 ]
             },
             {
@@ -152,17 +159,6 @@ async function home(filter) {
                     {'n':'大陆','v':'大陆'},
                     {'n':'日本','v':'日本'},
                     {'n':'美国','v':'美国'}
-                ]
-            },
-            {
-                'key': 'year',
-                'name': '年代',
-                'value': [
-                    {'n':'全部','v':'0'},
-                    {'n':'2026','v':'2026'},
-                    {'n':'2025','v':'2025'},
-                    {'n':'2024','v':'2024'},
-                    {'n':'2023','v':'2023'}
                 ]
             }
         ],
@@ -212,7 +208,7 @@ async function homeVod() {
     const $ = load(html);
     const videos = [];
     
-    $('li').each((i, li) => {
+    $('section.mod li').each((i, li) => {
         const $li = $(li);
         const $a = $li.find('a[href*="/vod-detail-id-"]');
         if ($a.length > 0) {
@@ -220,19 +216,20 @@ async function homeVod() {
             const id = href.match(/\/vod-detail-id-(\d+)\.html/)?.[1];
             
             if (id && videos.filter(v => v.vod_id === id).length === 0) {
-                const $img = $li.find('img');
-                let vodPic = $img.attr('data-echo') || $img.attr('src') || $img.attr('data-src') || '';
+                let vodPic = $li.find('img').attr('data-src') || 
+                            $li.find('img').attr('data-echo') || 
+                            $li.find('img').attr('src') || '';
                 
                 if (vodPic && !vodPic.startsWith('http')) {
                     if (vodPic.startsWith('//')) {
                         vodPic = 'https:' + vodPic;
-                    } else {
+                    } else if (vodPic.startsWith('/')) {
                         vodPic = HOST + vodPic;
                     }
                 }
                 
-                const title = $a.attr('title') || '';
-                const remarks = $li.find('.sDes, span').text().trim();
+                const title = $a.attr('title') || $li.find('.sTit').text().trim() || '';
+                const remarks = $li.find('.sDes').text().trim() || '';
                 
                 if (title && !title.includes('logo') && !title.includes('搜索')) {
                     videos.push({
@@ -259,13 +256,13 @@ async function category(tid, pg, filter, extend) {
     const year = extend.year || '0';
     const letter = extend.letter || '';
     
-    const link = HOST + '/vod-list-id-' + tid + '-pg-' + pg + '-order--by-' + by + '-class-0-year-' + year + '-letter-' + letter + '-area-' + encodeURIComponent(area) + '-lang-.html';
+    const link = HOST + '/index.php?m=vod-list-id-' + tid + '-pg-' + pg + '-order--by-' + by + '-class-0-year-' + year + '-letter-' + letter + '-area-' + encodeURIComponent(area) + '-lang-.html';
     
     const html = await request(link);
     const $ = load(html);
     const videos = [];
     
-    $('li').each((i, li) => {
+    $('ul.resize_list li').each((i, li) => {
         const $li = $(li);
         const $a = $li.find('a[href*="/vod-detail-id-"]');
         if ($a.length > 0) {
@@ -273,19 +270,20 @@ async function category(tid, pg, filter, extend) {
             const id = href.match(/\/vod-detail-id-(\d+)\.html/)?.[1];
             
             if (id) {
-                const $img = $li.find('img');
-                let vodPic = $img.attr('data-echo') || $img.attr('src') || $img.attr('data-src') || '';
+                let vodPic = $li.find('img').attr('data-src') || 
+                            $li.find('img').attr('data-echo') || 
+                            $li.find('img').attr('src') || '';
                 
                 if (vodPic && !vodPic.startsWith('http')) {
                     if (vodPic.startsWith('//')) {
                         vodPic = 'https:' + vodPic;
-                    } else {
+                    } else if (vodPic.startsWith('/')) {
                         vodPic = HOST + vodPic;
                     }
                 }
                 
-                const title = $a.attr('title') || '';
-                const remarks = $li.find('.sDes, span').text().trim();
+                const title = $a.attr('title') || $li.find('.sTit').text().trim() || '';
+                const remarks = $li.find('.sDes').text().trim() || '';
                 
                 if (title) {
                     videos.push({
@@ -333,7 +331,7 @@ async function detail(id) {
     if (vodPic && !vodPic.startsWith('http')) {
         if (vodPic.startsWith('//')) {
             vodPic = 'https:' + vodPic;
-        } else {
+        } else if (vodPic.startsWith('/')) {
             vodPic = HOST + vodPic;
         }
     }
@@ -607,8 +605,8 @@ function decryptVideoUrl(encryptedUrl, encodeType, srcNum) {
 }
 
 async function search(wd, quick) {
-    const searchUrl = HOST + '/index.php?m=vod-search-wd-' + encodeURIComponent(wd) + '.html';
-    const html = await request(searchUrl);
+    const postData = 'wd=' + encodeURIComponent(wd);
+    const html = await request(HOST + '/index.php?m=vod-search', postData);
     const $ = load(html);
     const videos = [];
     
@@ -620,19 +618,20 @@ async function search(wd, quick) {
             const id = href.match(/\/vod-detail-id-(\d+)\.html/)?.[1];
             
             if (id) {
-                const $img = $li.find('img');
-                let vodPic = $img.attr('data-echo') || $img.attr('src') || $img.attr('data-src') || '';
+                let vodPic = $li.find('img').attr('data-src') || 
+                            $li.find('img').attr('data-echo') || 
+                            $li.find('img').attr('src') || '';
                 
                 if (vodPic && !vodPic.startsWith('http')) {
                     if (vodPic.startsWith('//')) {
                         vodPic = 'https:' + vodPic;
-                    } else {
+                    } else if (vodPic.startsWith('/')) {
                         vodPic = HOST + vodPic;
                     }
                 }
                 
-                const title = $a.attr('title') || '';
-                const remarks = $li.find('.sDes, span').text().trim();
+                const title = $a.attr('title') || $li.find('.sTit').text().trim() || '';
+                const remarks = $li.find('.sDes').text().trim() || '';
                 
                 if (title) {
                     videos.push({
