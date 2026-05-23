@@ -179,6 +179,23 @@ async function detail(id) {
     
     const vod_content = $('article.detail-con p').text().trim() || '';
     
+    let macFrom = '';
+    let macUrl = '';
+    const $scripts = $('script');
+    $scripts.each((i, script) => {
+        const text = $(script).html() || '';
+        if (text.includes("mac_from=")) {
+            const match = text.match(/mac_from\s*=\s*['"]([^'"]+)['"]/);
+            if (match) macFrom = match[1];
+        }
+        if (text.includes("mac_url=")) {
+            const match = text.match(/mac_url\s*=\s*['"]([^'"]+)['"]/);
+            if (match) macUrl = match[1];
+        }
+    });
+    
+    parseMap[id] = { macFrom, macUrl };
+    
     const playMap = {};
     $('div.numList').each((idx, list) => {
         const $list = $(list);
@@ -218,27 +235,43 @@ async function detail(id) {
 }
 
 async function play(flag, id, flags) {
-    const html = await request(HOST + id);
-    const $ = load(html);
+    const idMatch = id.match(/vod-detail-id-(\d+)/);
+    const vodId = idMatch ? idMatch[1] : '';
     
+    let macFrom = '';
     let macUrl = '';
-    const $scripts = $('script');
     
-    $scripts.each((i, script) => {
-        const text = $(script).html() || '';
-        if (text.includes("mac_url=")) {
-            const match = text.match(/mac_url\s*=\s*['"]([^'"]+)['"]/);
-            if (match) {
-                macUrl = match[1];
+    if (vodId && parseMap[vodId]) {
+        macFrom = parseMap[vodId].macFrom || '';
+        macUrl = parseMap[vodId].macUrl || '';
+    }
+    
+    if (!macUrl) {
+        const html = await request(HOST + id);
+        const $ = load(html);
+        
+        const $scripts = $('script');
+        $scripts.each((i, script) => {
+            const text = $(script).html() || '';
+            if (text.includes("mac_from=")) {
+                const match = text.match(/mac_from\s*=\s*['"]([^'"]+)['"]/);
+                if (match) macFrom = match[1];
             }
-        }
-    });
+            if (text.includes("mac_url=")) {
+                const match = text.match(/mac_url\s*=\s*['"]([^'"]+)['"]/);
+                if (match) macUrl = match[1];
+            }
+        });
+    }
     
     const srcMatch = id.match(/src-(\d+)-/);
     const srcNum = srcMatch ? parseInt(srcMatch[1]) : 1;
     
     const urlParts = macUrl.split('$$$');
+    const fromParts = macFrom.split('$$$');
+    
     let encryptUrl = '';
+    let encodeType = '';
     
     if (srcNum === 2 && urlParts.length >= 2) {
         const line2Data = urlParts[1];
@@ -247,6 +280,7 @@ async function play(flag, id, flags) {
         if (currentEp) {
             encryptUrl = currentEp.split('$')[1] || currentEp;
         }
+        encodeType = fromParts.length >= 2 ? fromParts[1] : '';
     } else {
         const line1Data = urlParts[0];
         const line1Eps = line1Data.split('#');
@@ -254,9 +288,10 @@ async function play(flag, id, flags) {
         if (currentEp) {
             encryptUrl = currentEp.split('$')[1] || currentEp;
         }
+        encodeType = fromParts.length >= 1 ? fromParts[0] : '';
     }
     
-    let videoUrl = decryptVideoUrl(encryptUrl, srcNum);
+    let videoUrl = decryptVideoUrl(encryptUrl, encodeType, srcNum);
     
     if (!videoUrl) {
         videoUrl = 'https://api.nmvod.me:520/player/?url=' + encodeURIComponent(encryptUrl);
@@ -280,49 +315,110 @@ async function play(flag, id, flags) {
     });
 }
 
-function decryptVideoUrl(encryptedUrl, srcNum) {
+function decryptVideoUrl(encryptedUrl, encodeType, srcNum) {
     try {
-        const decoded = Buffer.from(encryptedUrl.substring(1), 'base64');
-        const ascii = decoded.toString('ascii');
+        if (!encodeType) encodeType = srcNum === 2 ? 'lzm3u8' : 'uvw';
         
-        const m3u8Pos = ascii.indexOf('.m3u8');
-        if (m3u8Pos === -1) return null;
-        
-        let path = '';
-        
-        if (srcNum === 2) {
-            let startPos = m3u8Pos;
-            
-            for (let i = m3u8Pos - 1; i >= 0; i--) {
-                const byte = decoded[i];
-                if (byte >= 32 && byte <= 126) {
-                    startPos = i;
-                } else {
-                    if (startPos < m3u8Pos - 10) break;
+        for (let offset = 1; offset < 50; offset++) {
+            try {
+                const testStr = encryptedUrl.substring(offset);
+                const decoded = Buffer.from(testStr, 'base64');
+                const ascii = decoded.toString('ascii');
+                
+                const m3u8Pos = ascii.indexOf('.m3u8');
+                if (m3u8Pos === -1) continue;
+                
+                let path = '';
+                
+                if (encodeType.includes('lzm3u8')) {
+                    let startPos = -1;
+                    for (let i = m3u8Pos - 1; i >= 0; i--) {
+                        const byte = decoded[i];
+                        if (byte >= 32 && byte <= 126) {
+                            startPos = i;
+                        } else {
+                            if (startPos !== -1 && startPos < m3u8Pos - 20) break;
+                        }
+                    }
+                    
+                    if (startPos !== -1) {
+                        path = ascii.substring(startPos, m3u8Pos + 5);
+                        path = path.replace(/[^\x20-\x7E]/g, '');
+                        
+                        if (path.match(/^\/(\d{5})\//)) {
+                            path = path.replace(/^\/(\d{5})\//, '/2$1/');
+                        }
+                    }
                 }
-            }
-            
-            path = ascii.substring(startPos, m3u8Pos + 5);
-            path = path.replace(/[^\x20-\x7E]/g, '');
-            
-            if (path.match(/^\/(\d{5})\//)) {
-                path = path.replace(/^\/(\d{5})\//, '/2$1/');
-            }
-        } else {
-            const idMatch = ascii.match(/(3039965\/\d{6})/);
-            if (idMatch) {
-                const basePath = idMatch[1];
-                const epMatch = ascii.match(/(EP\d{2}\.m3u8)/);
-                if (epMatch) {
-                    path = '/' + basePath + '/' + epMatch[1];
-                    path = path.replace(/[^\x20-\x7E\/\.]/g, '');
+                
+                if (!path && encodeType.includes('uvw')) {
+                    let startPos = -1;
+                    for (let i = m3u8Pos - 1; i >= 0; i--) {
+                        const byte = decoded[i];
+                        if (byte >= 32 && byte <= 126) {
+                            startPos = i;
+                        } else {
+                            if (startPos !== -1 && startPos < m3u8Pos - 30) break;
+                        }
+                    }
+                    
+                    if (startPos !== -1) {
+                        path = ascii.substring(startPos, m3u8Pos + 5);
+                        path = path.replace(/[^\x20-\x7E]/g, '');
+                    }
+                    
+                    if (!path || path.length < 15) {
+                        const idMatch = ascii.match(/(\d{5,7}\/\d{5,7})/);
+                        if (idMatch) {
+                            const basePath = idMatch[1];
+                            const epMatch = ascii.match(/(EP\d{2}\.m3u8)/);
+                            const numMatch = ascii.match(/(\d{1,2}\.m3u8)/);
+                            
+                            if (epMatch) {
+                                path = '/' + basePath + '/' + epMatch[1];
+                            } else if (numMatch) {
+                                path = '/' + basePath + '/' + numMatch[1];
+                            } else {
+                                const simpleMatch = ascii.match(/(\d+\/[\w\/\-]+\.m3u8)/);
+                                if (simpleMatch) {
+                                    path = '/' + simpleMatch[1];
+                                }
+                            }
+                            if (path) {
+                                path = path.replace(/[^\x20-\x7E\/\.]/g, '');
+                            }
+                        }
+                    }
                 }
+                
+                if (!path) {
+                    let startPos = -1;
+                    for (let i = m3u8Pos - 1; i >= 0; i--) {
+                        const byte = decoded[i];
+                        if (byte >= 32 && byte <= 126) {
+                            startPos = i;
+                        } else {
+                            if (startPos !== -1 && startPos < m3u8Pos - 20) break;
+                        }
+                    }
+                    
+                    if (startPos !== -1) {
+                        path = ascii.substring(startPos, m3u8Pos + 5);
+                        path = path.replace(/[^\x20-\x7E]/g, '');
+                    }
+                }
+                
+                if (path && path.includes('.m3u8')) {
+                    if (!path.startsWith('/')) path = '/' + path;
+                    
+                    if (path.length >= 10) {
+                        return 'https://play.svip30.tv' + path;
+                    }
+                }
+                
+            } catch (e) {
+                continue;
             }
-        }
-        
-        if (path && path.includes('.m3u8')) {
-            if (!path.startsWith('/')) path = '/' + path;
-            return 'https://play.svip30.tv' + path;
         }
         
         return null;
