@@ -409,105 +409,77 @@ async function search(wd, quick) {
         'wd=' + encodeURIComponent(wd)
     );
 
-    const $ = load(html);
     const list = [];
     
-    // 直接解析 #data_list 下的 li 元素
-    $('#data_list li').each((_, el) => {
-        const $el = $(el);
-        
-        // 查找视频链接
-        const $a = $el.find('a[href*="/vod-detail-id-"]').first();
-        if (!$a.length) return;
-        
-        const href = $a.attr('href');
-        const vodIdMatch = href.match(/vod-detail-id-(\d+)/);
-        if (!vodIdMatch) return;
-        
-        const vodId = vodIdMatch[1];
-        
-        // 获取图片
-        let vodPic = '';
-        const $img = $el.find('img').first();
-        if ($img.length) {
-            vodPic = $img.attr('data-src') || $img.attr('src') || '';
-            vodPic = fixUrl(vodPic);
-        }
-        
-        // 获取标题，优先使用 .sTit
-        let vodName = '';
-        const $sTit = $el.find('.sTit');
-        if ($sTit.length) {
-            vodName = $sTit.text().trim();
-        }
-        // 备用方案
-        if (!vodName) {
-            vodName = $a.attr('title') || '';
-        }
-        
-        // 获取备注/描述
-        let vodRemarks = '';
-        const $sDes = $el.find('.sDes').first();
-        if ($sDes.length) {
-            vodRemarks = $sDes.text().trim();
-        }
-        
-        list.push({
-            vod_id: vodId,
-            vod_name: vodName,
-            vod_pic: vodPic,
-            vod_remarks: vodRemarks
-        });
-    });
+    if (!html || html.length === 0) {
+        return JSON.stringify({ list: [] });
+    }
     
-    // 如果 #data_list li 没有找到，尝试用其他方式
-    if (list.length === 0) {
-        const seenIds = new Set();
-        $('a[href*="/vod-detail-id-"]').each((_, a) => {
-            const $a = $(a);
-            const href = $a.attr('href');
-            const vodIdMatch = href.match(/vod-detail-id-(\d+)/);
-            if (!vodIdMatch) return;
+    // 直接使用正则表达式解析搜索结果
+    const dataListMatch = html.match(/<ul[^>]*id="data_list"[^>]*>([\s\S]*?)<\/ul>/);
+    if (dataListMatch) {
+        const ulContent = dataListMatch[1];
+        
+        const liRegex = /<li[^>]*>([\s\S]*?)<\/li>/g;
+        let liMatch;
+        
+        while ((liMatch = liRegex.exec(ulContent)) !== null) {
+            const liContent = liMatch[1];
             
-            const vodId = vodIdMatch[1];
-            if (seenIds.has(vodId)) return;
-            seenIds.add(vodId);
+            // 提取视频ID
+            const hrefMatch = liContent.match(/href="([^"]*vod-detail-id-(\d+)[^"]*)"/);
+            if (!hrefMatch || !hrefMatch[2]) continue;
             
-            // 找父元素
-            const $parent = $a.closest('li, div, .item, .video-item');
+            const vodId = hrefMatch[2];
+            
+            // 提取图片
             let vodPic = '';
-            let vodName = '';
-            
-            if ($parent.length) {
-                const $img = $parent.find('img').first();
-                if ($img.length) {
-                    vodPic = $img.attr('data-src') || $img.attr('src') || '';
-                    vodPic = fixUrl(vodPic);
-                }
-                
-                // 尝试找标题
-                const selectors = ['.sTit', '.title', '.name', 'h3', 'h4'];
-                for (const sel of selectors) {
-                    const $title = $parent.find(sel).first();
-                    if ($title.length) {
-                        vodName = $title.text().trim();
-                        if (vodName) break;
+            const imgMatch = liContent.match(/<img[^>]*>/);
+            if (imgMatch) {
+                const dataSrcMatch = imgMatch[0].match(/data-src="([^"]*)"/);
+                if (dataSrcMatch) {
+                    vodPic = dataSrcMatch[1];
+                } else {
+                    const srcMatch = imgMatch[0].match(/src="([^"]*)"/);
+                    if (srcMatch) {
+                        vodPic = srcMatch[1];
                     }
                 }
             }
+            vodPic = fixUrl(vodPic);
             
-            // 如果没有找到标题，用 link 的 title
-            if (!vodName) {
-                vodName = $a.attr('title') || '';
+            // 提取标题
+            let vodName = '';
+            const sTitMatch = liContent.match(/<span[^>]*class="[^"]*sTit[^"]*"[^>]*>([^<]*)/);
+            if (sTitMatch) {
+                vodName = sTitMatch[1].trim();
             }
             
+            // 只有当标题有效时才添加
+            if (vodName) {
+                list.push({
+                    vod_id: vodId,
+                    vod_name: vodName,
+                    vod_pic: vodPic,
+                    vod_remarks: ''
+                });
+            }
+        }
+    }
+    
+    // 如果上面的方法失败，尝试更简单的方法
+    if (list.length === 0) {
+        const regex = /<li[^>]*>\s*<div[^>]*class="[^"]*pic[^"]*"[^>]*>\s*<a[^>]*href="([^"]*vod-detail-id-(\d+)[^"]*)"[^>]*>\s*<img[^>]*src="([^"]*)"[^>]*>\s*<\/a>\s*<\/div>\s*<div[^>]*>\s*<span[^>]*class="[^"]*sTit[^"]*"[^>]*>([^<]*)/g;
+        let match;
+        
+        while ((match = regex.exec(html)) !== null) {
             list.push({
-                vod_id: vodId,
-                vod_name: vodName,
-                vod_pic: vodPic,
+                vod_id: match[2],
+                vod_name: match[4].trim(),
+                vod_pic: fixUrl(match[3]),
                 vod_remarks: ''
             });
-        });
+        }
     }
 
     return JSON.stringify({
