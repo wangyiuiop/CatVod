@@ -41,33 +41,55 @@ function parseVodList($, selector) {
     $(selector).each((_, el) => {
         const $el = $(el);
 
-        const $a = $el.find('a[href*="/vod-detail-id-"]');
+        // 尝试找到包含 vod-detail-id 的链接
+        let $a = $el.find('a[href*="/vod-detail-id-"]');
+        
+        // 如果直接找不到，就找第一个链接
+        if (!$a.length) {
+            $a = $el.find('a').first();
+        }
 
         if (!$a.length) return;
 
         const href = $a.attr('href') || '';
 
-        const vodId = href.match(/vod-detail-id-(\d+)/)?.[1];
+        // 从链接中提取视频ID
+        const vodIdMatch = href.match(/vod-detail-id-(\d+)/);
+        if (!vodIdMatch) return;
+        const vodId = vodIdMatch[1];
 
-        if (!vodId) return;
-
-        let vodPic =
-            $el.find('img').attr('data-src') ||
-            $el.find('img').attr('data-echo') ||
-            $el.find('img').attr('src') ||
-            '';
-
+        // 获取图片地址
+        let vodPic = '';
+        const $img = $el.find('img').first();
+        if ($img.length) {
+            vodPic = $img.attr('data-src') || $img.attr('data-echo') || $img.attr('src') || '';
+        }
         vodPic = fixUrl(vodPic);
 
-        const vodName =
-            $a.attr('title') ||
-            $el.find('.sTit').text().trim() ||
-            '';
+        // 获取视频名称
+        let vodName = $a.attr('title') || '';
+        if (!vodName) {
+            const $sTit = $el.find('.sTit');
+            if ($sTit.length) {
+                vodName = $sTit.text().trim();
+            }
+        }
+        if (!vodName) {
+            vodName = $el.text().trim().split('\n')[0] || '';
+        }
 
-        const vodRemarks =
-            $el.find('.sDes').text().trim() ||
-            $el.find('.remarks').text().trim() ||
-            '';
+        // 获取备注信息
+        let vodRemarks = '';
+        const $sDes = $el.find('.sDes');
+        if ($sDes.length) {
+            vodRemarks = $sDes.text().trim();
+        }
+        if (!vodRemarks) {
+            const $remarks = $el.find('.remarks');
+            if ($remarks.length) {
+                vodRemarks = $remarks.text().trim();
+            }
+        }
 
         list.push({
             vod_id: vodId,
@@ -388,8 +410,53 @@ async function search(wd, quick) {
     );
 
     const $ = load(html);
-
-    const list = parseVodList($, '#data_list li');
+    
+    // 尝试多种选择器来找到视频列表
+    let list = parseVodList($, '#data_list li');
+    
+    // 如果第一种方法没找到结果，尝试其他方式
+    if (list.length === 0) {
+        // 尝试查找所有包含 vod-detail-id 的链接
+        list = [];
+        $('a[href*="/vod-detail-id-"]').each((_, a) => {
+            const $a = $(a);
+            const href = $a.attr('href');
+            const vodIdMatch = href.match(/vod-detail-id-(\d+)/);
+            if (!vodIdMatch) return;
+            
+            const vodId = vodIdMatch[1];
+            
+            // 找到包含这个链接的父级 li 元素
+            const $li = $a.closest('li');
+            if ($li.length) {
+                // 检查这个 ID 是否已经被添加
+                const alreadyExists = list.some(item => item.vod_id === vodId);
+                if (!alreadyExists) {
+                    let vodPic = '';
+                    const $img = $li.find('img').first();
+                    if ($img.length) {
+                        vodPic = $img.attr('data-src') || $img.attr('data-echo') || $img.attr('src') || '';
+                        vodPic = fixUrl(vodPic);
+                    }
+                    
+                    let vodName = $a.attr('title') || '';
+                    if (!vodName) {
+                        const $sTit = $li.find('.sTit');
+                        if ($sTit.length) {
+                            vodName = $sTit.text().trim();
+                        }
+                    }
+                    
+                    list.push({
+                        vod_id: vodId,
+                        vod_name: vodName,
+                        vod_pic: vodPic,
+                        vod_remarks: ''
+                    });
+                }
+            }
+        });
+    }
 
     return JSON.stringify({
         list,
