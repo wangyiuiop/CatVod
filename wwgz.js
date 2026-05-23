@@ -272,27 +272,21 @@ async function play(flag, id, flags) {
 // 解密视频URL函数
 function decryptVideoUrl(encryptedUrl) {
     try {
-        // 从偏移1开始尝试解密
         for (let offset = 1; offset < 20; offset++) {
             try {
                 const testStr = encryptedUrl.substring(offset);
                 const decoded = Buffer.from(testStr, 'base64').toString('utf8');
                 
                 if (decoded.includes('.m3u8')) {
-                    // 提取目录ID
                     const dirMatch = decoded.match(/(\d+)\/dy\//);
                     if (!dirMatch) continue;
                     const dirId = dirMatch[1];
                     
-                    // 提取m3u8文件名
-                    const fileMatch = decoded.match(/\/dy\/([^?\s"']+\.m3u8)/);
+                    const fileMatch = decoded.match(/\/dy\/([^\/]+)\.m3u8/);
                     if (!fileMatch) continue;
-                    let m3u8File = fileMatch[1];
-                    // 清理特殊字符
-                    m3u8File = m3u8File.replace(/[^\w\-\/.\u4e00-\u9fa5]/g, '');
                     
-                    // 构造完整URL
-                    return 'https://play.svip30.tv/' + dirId + '/dy/' + m3u8File;
+                    const filename = fileMatch[1] + '.m3u8';
+                    return 'https://play.svip30.tv/' + dirId + '/dy/' + filename;
                 }
             } catch (e) {
                 // 忽略错误继续尝试
