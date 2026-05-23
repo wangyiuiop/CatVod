@@ -83,7 +83,13 @@ async function homeVod() {}
 
 async function category(tid, pg, filter, extend) {
     if (pg <= 0) pg = 1;
-    const link = HOST + '/k/' + (extend.cateId || tid) + '-' + (extend.area || '') + '-' + (extend.by || 'time_add') + '--' + (extend.lang || '') + '-' + (extend.letter || '') + '---' + pg + '---' + (extend.year || '') + '.html';
+    const cateId = extend.cateId || tid;
+    const area = extend.area || '';
+    const lang = extend.lang || '';
+    const year = extend.year || '';
+    const letter = extend.letter || '';
+    const by = extend.by || '';
+    const link = HOST + '/vodshow/' + cateId + '-' + area + '-' + lang + '-' + year + '-' + letter + '-' + by + '---' + pg + '---/';
     const html = await request(link);
     const $ = load(html);
     const items = $('a.module-poster-item.module-item');
@@ -97,13 +103,13 @@ async function category(tid, pg, filter, extend) {
             vodPic = HOST + vodPic;
         }
         return {
-            vod_id: a.attr('href').replace(/.*?\/vod\/(.*)\//g, '$1'),
+            vod_id: a.attr('href').replace(/.*?\/voddetail\/(.*)\//g, '$1'),
             vod_name: a.attr('title'),
             vod_pic: vodPic,
             vod_remarks: remarks,
         };
     });
-    const limit = 72;
+    const limit = 12;
     const hasMore = $('div#page > a:contains(下一页)').length > 0;
     const pgCount = hasMore ? parseInt(pg) + 1 : parseInt(pg);
     return JSON.stringify({
@@ -116,7 +122,7 @@ async function category(tid, pg, filter, extend) {
 }
 
 async function detail(id) {
-    const html = await request(HOST + id + '.html');
+    const html = await request(HOST + '/voddetail/' + id + '/');
     const $ = load(html);
     let vodPic = $('.module-info-poster img:first').attr('data-original') || $('.module-info-poster img:first').attr('src');
     if (vodPic && !vodPic.startsWith('http')) {
@@ -184,7 +190,7 @@ async function play(flag, id, flags) {
 }
 
 async function search(wd, quick) {
-    const html = await request(HOST + '/vodsearch/' + wd + '-------------.html');
+    const html = await request(HOST + '/vodsearch/-------------/?wd=' + encodeURIComponent(wd));
     const $ = load(html);
     const items = $('.module-card-item.module-item');
     const videos = _.map(items, (item) => {
@@ -197,7 +203,7 @@ async function search(wd, quick) {
             vodPic = HOST + vodPic;
         }
         return {
-            vod_id: a.attr('href').replace(/.*?\/vod\/(.*).html/g, '$1'),
+            vod_id: a.attr('href').replace(/.*?\/voddetail\/(.*)\//g, '$1'),
             vod_name: img.attr('alt'),
             vod_pic: vodPic,
             vod_remarks: remarks,
