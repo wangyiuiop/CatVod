@@ -409,78 +409,29 @@ async function search(wd, quick) {
         'wd=' + encodeURIComponent(wd)
     );
 
+    const $ = load(html);
     const list = [];
     
-    if (!html || html.length === 0) {
-        return JSON.stringify({ list: [] });
-    }
-    
-    // 直接使用正则表达式解析搜索结果
-    const dataListMatch = html.match(/<ul[^>]*id="data_list"[^>]*>([\s\S]*?)<\/ul>/);
-    if (dataListMatch) {
-        const ulContent = dataListMatch[1];
+    // 使用正确的选择器解析搜索结果
+    $('#search_main ul li').each((_, element) => {
+        const $element = $(element);
+        const href = $element.find('.pic a').attr('href');
+        const title = $element.find('.sTit').text().trim();
+        const cover = $element.find('img').attr('data-src');
+        const subTitle = $element.find('.sStyle').text().trim();
         
-        const liRegex = /<li[^>]*>([\s\S]*?)<\/li>/g;
-        let liMatch;
-        
-        while ((liMatch = liRegex.exec(ulContent)) !== null) {
-            const liContent = liMatch[1];
+        if (href && title) {
+            const vodIdMatch = href.match(/vod-detail-id-(\d+)/);
+            const vodId = vodIdMatch ? vodIdMatch[1] : href;
             
-            // 提取视频ID
-            const hrefMatch = liContent.match(/href="([^"]*vod-detail-id-(\d+)[^"]*)"/);
-            if (!hrefMatch || !hrefMatch[2]) continue;
-            
-            const vodId = hrefMatch[2];
-            
-            // 提取图片
-            let vodPic = '';
-            const imgMatch = liContent.match(/<img[^>]*>/);
-            if (imgMatch) {
-                const dataSrcMatch = imgMatch[0].match(/data-src="([^"]*)"/);
-                if (dataSrcMatch) {
-                    vodPic = dataSrcMatch[1];
-                } else {
-                    const srcMatch = imgMatch[0].match(/src="([^"]*)"/);
-                    if (srcMatch) {
-                        vodPic = srcMatch[1];
-                    }
-                }
-            }
-            vodPic = fixUrl(vodPic);
-            
-            // 提取标题
-            let vodName = '';
-            const sTitMatch = liContent.match(/<span[^>]*class="[^"]*sTit[^"]*"[^>]*>([^<]*)/);
-            if (sTitMatch) {
-                vodName = sTitMatch[1].trim();
-            }
-            
-            // 只有当标题有效时才添加
-            if (vodName) {
-                list.push({
-                    vod_id: vodId,
-                    vod_name: vodName,
-                    vod_pic: vodPic,
-                    vod_remarks: ''
-                });
-            }
-        }
-    }
-    
-    // 如果上面的方法失败，尝试更简单的方法
-    if (list.length === 0) {
-        const regex = /<li[^>]*>\s*<div[^>]*class="[^"]*pic[^"]*"[^>]*>\s*<a[^>]*href="([^"]*vod-detail-id-(\d+)[^"]*)"[^>]*>\s*<img[^>]*src="([^"]*)"[^>]*>\s*<\/a>\s*<\/div>\s*<div[^>]*>\s*<span[^>]*class="[^"]*sTit[^"]*"[^>]*>([^<]*)/g;
-        let match;
-        
-        while ((match = regex.exec(html)) !== null) {
             list.push({
-                vod_id: match[2],
-                vod_name: match[4].trim(),
-                vod_pic: fixUrl(match[3]),
-                vod_remarks: ''
+                vod_id: vodId,
+                vod_name: title,
+                vod_pic: fixUrl(cover),
+                vod_remarks: subTitle || '',
             });
         }
-    }
+    });
 
     return JSON.stringify({
         list,
