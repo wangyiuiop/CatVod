@@ -33,22 +33,16 @@ async function home(filter) {
         {'type_id':'20','type_name':'小姐姐'},
         {'type_id':'31','type_name':'音乐'}
     ];
+    
     const filterObj = {
         '1': [
             {
-                'key': 'class',
-                'name': '类型',
+                'key': 'by',
+                'name': '排序',
                 'value': [
-                    {'n':'全部','v':'0'},
-                    {'n':'动作片','v':'5'},
-                    {'n':'喜剧片','v':'6'},
-                    {'n':'爱情片','v':'7'},
-                    {'n':'科幻片','v':'8'},
-                    {'n':'恐怖片','v':'9'},
-                    {'n':'剧情片','v':'10'},
-                    {'n':'战争片','v':'11'},
-                    {'n':'惊悚片','v':'16'},
-                    {'n':'奇幻片','v':'17'}
+                    {'n':'时间','v':'time'},
+                    {'n':'人气','v':'hits'},
+                    {'n':'评分','v':'score'}
                 ]
             },
             {
@@ -62,8 +56,14 @@ async function home(filter) {
                     {'n':'美国','v':'美国'},
                     {'n':'韩国','v':'韩国'},
                     {'n':'日本','v':'日本'},
-                    {'n':'英国','v':'英国'},
                     {'n':'泰国','v':'泰国'},
+                    {'n':'新加坡','v':'新加坡'},
+                    {'n':'马来西亚','v':'马来西亚'},
+                    {'n':'英国','v':'英国'},
+                    {'n':'法国','v':'法国'},
+                    {'n':'加拿大','v':'加拿大'},
+                    {'n':'西班牙','v':'西班牙'},
+                    {'n':'俄罗斯','v':'俄罗斯'},
                     {'n':'其它','v':'其它'}
                 ]
             },
@@ -82,15 +82,6 @@ async function home(filter) {
                     {'n':'2019','v':'2019'},
                     {'n':'2018','v':'2018'}
                 ]
-            },
-            {
-                'key': 'by',
-                'name': '排序',
-                'value': [
-                    {'n':'时间','v':'time'},
-                    {'n':'人气','v':'hits'},
-                    {'n':'评分','v':'score'}
-                ]
             }
         ],
         '2': [
@@ -101,6 +92,34 @@ async function home(filter) {
                     {'n':'时间','v':'time'},
                     {'n':'人气','v':'hits'},
                     {'n':'评分','v':'score'}
+                ]
+            },
+            {
+                'key': 'area',
+                'name': '地区',
+                'value': [
+                    {'n':'全部','v':''},
+                    {'n':'大陆','v':'大陆'},
+                    {'n':'香港','v':'香港'},
+                    {'n':'台湾','v':'台湾'},
+                    {'n':'美国','v':'美国'},
+                    {'n':'韩国','v':'韩国'},
+                    {'n':'日本','v':'日本'},
+                    {'n':'英国','v':'英国'},
+                    {'n':'泰国','v':'泰国'}
+                ]
+            },
+            {
+                'key': 'year',
+                'name': '年代',
+                'value': [
+                    {'n':'全部','v':'0'},
+                    {'n':'2026','v':'2026'},
+                    {'n':'2025','v':'2025'},
+                    {'n':'2024','v':'2024'},
+                    {'n':'2023','v':'2023'},
+                    {'n':'2022','v':'2022'},
+                    {'n':'2021','v':'2021'}
                 ]
             }
         ],
@@ -123,6 +142,27 @@ async function home(filter) {
                     {'n':'时间','v':'time'},
                     {'n':'人气','v':'hits'},
                     {'n':'评分','v':'score'}
+                ]
+            },
+            {
+                'key': 'area',
+                'name': '地区',
+                'value': [
+                    {'n':'全部','v':''},
+                    {'n':'大陆','v':'大陆'},
+                    {'n':'日本','v':'日本'},
+                    {'n':'美国','v':'美国'}
+                ]
+            },
+            {
+                'key': 'year',
+                'name': '年代',
+                'value': [
+                    {'n':'全部','v':'0'},
+                    {'n':'2026','v':'2026'},
+                    {'n':'2025','v':'2025'},
+                    {'n':'2024','v':'2024'},
+                    {'n':'2023','v':'2023'}
                 ]
             }
         ],
@@ -160,6 +200,7 @@ async function home(filter) {
             }
         ]
     };
+    
     return JSON.stringify({
         class: classes,
         filters: filterObj,
@@ -171,7 +212,7 @@ async function homeVod() {
     const $ = load(html);
     const videos = [];
     
-    $('ul.resize_list li').each((i, li) => {
+    $('li').each((i, li) => {
         const $li = $(li);
         const $a = $li.find('a[href*="/vod-detail-id-"]');
         if ($a.length > 0) {
@@ -180,7 +221,7 @@ async function homeVod() {
             
             if (id && videos.filter(v => v.vod_id === id).length === 0) {
                 const $img = $li.find('img');
-                let vodPic = $img.attr('data-echo') || $img.attr('src') || '';
+                let vodPic = $img.attr('data-echo') || $img.attr('src') || $img.attr('data-src') || '';
                 
                 if (vodPic && !vodPic.startsWith('http')) {
                     if (vodPic.startsWith('//')) {
@@ -190,10 +231,10 @@ async function homeVod() {
                     }
                 }
                 
-                const title = $a.attr('title') || $li.find('.sTit').text().trim() || '';
-                const remarks = $li.find('.sDes').text().trim() || '';
+                const title = $a.attr('title') || '';
+                const remarks = $li.find('.sDes, span').text().trim();
                 
-                if (title) {
+                if (title && !title.includes('logo') && !title.includes('搜索')) {
                     videos.push({
                         vod_id: id,
                         vod_name: title,
@@ -212,24 +253,19 @@ async function homeVod() {
 
 async function category(tid, pg, filter, extend) {
     if (pg <= 0) pg = 1;
-    const classId = extend.class || '0';
+    
+    const by = extend.by || 'time';
     const area = extend.area || '';
     const year = extend.year || '0';
     const letter = extend.letter || '';
-    const by = extend.by || 'time';
     
-    let useTypeId = tid;
-    if (classId !== '0') {
-        useTypeId = classId;
-    }
-    
-    const link = HOST + '/vod-list-id-' + useTypeId + '-pg-' + pg + '-order--by-' + by + '-class-' + classId + '-year-' + year + '-letter-' + letter + '-area-' + encodeURIComponent(area) + '-lang-.html';
+    const link = HOST + '/vod-list-id-' + tid + '-pg-' + pg + '-order--by-' + by + '-class-0-year-' + year + '-letter-' + letter + '-area-' + encodeURIComponent(area) + '-lang-.html';
     
     const html = await request(link);
     const $ = load(html);
     const videos = [];
     
-    $('ul.resize_list li').each((i, li) => {
+    $('li').each((i, li) => {
         const $li = $(li);
         const $a = $li.find('a[href*="/vod-detail-id-"]');
         if ($a.length > 0) {
@@ -238,7 +274,7 @@ async function category(tid, pg, filter, extend) {
             
             if (id) {
                 const $img = $li.find('img');
-                let vodPic = $img.attr('data-echo') || $img.attr('src') || '';
+                let vodPic = $img.attr('data-echo') || $img.attr('src') || $img.attr('data-src') || '';
                 
                 if (vodPic && !vodPic.startsWith('http')) {
                     if (vodPic.startsWith('//')) {
@@ -248,8 +284,8 @@ async function category(tid, pg, filter, extend) {
                     }
                 }
                 
-                const title = $a.attr('title') || $li.find('.sTit').text().trim() || '';
-                const remarks = $li.find('.sDes').text().trim() || '';
+                const title = $a.attr('title') || '';
+                const remarks = $li.find('.sDes, span').text().trim();
                 
                 if (title) {
                     videos.push({
@@ -272,6 +308,7 @@ async function category(tid, pg, filter, extend) {
     
     if (totalMatch) {
         total = parseInt(totalMatch[1]);
+        pageCount = Math.ceil(total / 30);
     }
     
     if (pageMatch) {
@@ -570,12 +607,12 @@ function decryptVideoUrl(encryptedUrl, encodeType, srcNum) {
 }
 
 async function search(wd, quick) {
-    const link = HOST + '/index.php?m=vod-search-wd-' + encodeURIComponent(wd) + '.html';
-    const html = await request(link);
+    const searchUrl = HOST + '/index.php?m=vod-search-wd-' + encodeURIComponent(wd) + '.html';
+    const html = await request(searchUrl);
     const $ = load(html);
     const videos = [];
     
-    $('ul.resize_list li').each((i, li) => {
+    $('li').each((i, li) => {
         const $li = $(li);
         const $a = $li.find('a[href*="/vod-detail-id-"]');
         if ($a.length > 0) {
@@ -584,7 +621,7 @@ async function search(wd, quick) {
             
             if (id) {
                 const $img = $li.find('img');
-                let vodPic = $img.attr('data-echo') || $img.attr('src') || '';
+                let vodPic = $img.attr('data-echo') || $img.attr('src') || $img.attr('data-src') || '';
                 
                 if (vodPic && !vodPic.startsWith('http')) {
                     if (vodPic.startsWith('//')) {
@@ -594,8 +631,8 @@ async function search(wd, quick) {
                     }
                 }
                 
-                const title = $a.attr('title') || $li.find('.sTit').text().trim() || '';
-                const remarks = $li.find('.sDes').text().trim() || '';
+                const title = $a.attr('title') || '';
+                const remarks = $li.find('.sDes, span').text().trim();
                 
                 if (title) {
                     videos.push({
