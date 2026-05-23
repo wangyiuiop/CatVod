@@ -34,36 +34,130 @@ async function home(filter) {
         {'type_id':'31','type_name':'音乐'}
     ];
     const filterObj = {
-        '1':[
-            {'key':'class','name':'类型','value':[{'n':'全部','v':'0'},{'n':'动作片','v':'6'},{'n':'喜剧片','v':'7'},{'n':'爱情片','v':'8'},{'n':'科幻片','v':'9'},{'n':'恐怖片','v':'10'},{'n':'剧情片','v':'11'},{'n':'战争片','v':'12'},{'n':'犯罪片','v':'13'},{'n':'悬疑片','v':'14'},{'n':'惊悚片','v':'15'},{'n':'冒险片','v':'16'},{'n':'奇幻片','v':'17'},{'n':'灾难片','v':'18'},{'n':'动画片','v':'19'},{'n':'纪录片','v':'20'}]},
-            {'key':'area','name':'地区','value':[{'n':'全部','v':''},{'n':'大陆','v':'大陆'},{'n':'香港','v':'香港'},{'n':'台湾','v':'台湾'},{'n':'美国','v':'美国'},{'n':'韩国','v':'韩国'},{'n':'日本','v':'日本'},{'n':'英国','v':'英国'},{'n':'泰国','v':'泰国'},{'n':'其他','v':'其他'}]},
-            {'key':'year','name':'年代','value':[{'n':'全部','v':'0'},{'n':'2026','v':'2026'},{'n':'2025','v':'2025'},{'n':'2024','v':'2024'},{'n':'2023','v':'2023'},{'n':'2022','v':'2022'},{'n':'2021','v':'2021'},{'n':'2020','v':'2020'},{'n':'2019','v':'2019'},{'n':'2018','v':'2018'},{'n':'2017','v':'2017'},{'n':'2016','v':'2016'},{'n':'2015','v':'2015'},{'n':'2014','v':'2014'},{'n':'2013','v':'2013'},{'n':'2012','v':'2012'},{'n':'2011','v':'2011'},{'n':'2010','v':'2010'},{'n':'更早','v':'1900'}]},
-            {'key':'by','name':'排序','value':[{'n':'时间','v':'time'},{'n':'人气','v':'hits'},{'n':'评分','v':'score'}]}
+        '1': [
+            {
+                'key': 'class',
+                'name': '类型',
+                'value': [
+                    {'n':'全部','v':'0'},
+                    {'n':'动作片','v':'5'},
+                    {'n':'喜剧片','v':'6'},
+                    {'n':'爱情片','v':'7'},
+                    {'n':'科幻片','v':'8'},
+                    {'n':'恐怖片','v':'9'},
+                    {'n':'剧情片','v':'10'},
+                    {'n':'战争片','v':'11'},
+                    {'n':'惊悚片','v':'16'},
+                    {'n':'奇幻片','v':'17'}
+                ]
+            },
+            {
+                'key': 'area',
+                'name': '地区',
+                'value': [
+                    {'n':'全部','v':''},
+                    {'n':'大陆','v':'大陆'},
+                    {'n':'香港','v':'香港'},
+                    {'n':'台湾','v':'台湾'},
+                    {'n':'美国','v':'美国'},
+                    {'n':'韩国','v':'韩国'},
+                    {'n':'日本','v':'日本'},
+                    {'n':'英国','v':'英国'},
+                    {'n':'泰国','v':'泰国'},
+                    {'n':'其它','v':'其它'}
+                ]
+            },
+            {
+                'key': 'year',
+                'name': '年代',
+                'value': [
+                    {'n':'全部','v':'0'},
+                    {'n':'2026','v':'2026'},
+                    {'n':'2025','v':'2025'},
+                    {'n':'2024','v':'2024'},
+                    {'n':'2023','v':'2023'},
+                    {'n':'2022','v':'2022'},
+                    {'n':'2021','v':'2021'},
+                    {'n':'2020','v':'2020'},
+                    {'n':'2019','v':'2019'},
+                    {'n':'2018','v':'2018'}
+                ]
+            },
+            {
+                'key': 'by',
+                'name': '排序',
+                'value': [
+                    {'n':'时间','v':'time'},
+                    {'n':'人气','v':'hits'},
+                    {'n':'评分','v':'score'}
+                ]
+            }
         ],
-        '2':[
-            {'key':'class','name':'类型','value':[{'n':'全部','v':'0'},{'n':'国产剧','v':'21'},{'n':'港台剧','v':'22'},{'n':'日韩剧','v':'23'},{'n':'欧美剧','v':'24'},{'n':'其他剧','v':'25'}]},
-            {'key':'area','name':'地区','value':[{'n':'全部','v':''},{'n':'大陆','v':'大陆'},{'n':'香港','v':'香港'},{'n':'台湾','v':'台湾'},{'n':'美国','v':'美国'},{'n':'韩国','v':'韩国'},{'n':'日本','v':'日本'},{'n':'英国','v':'英国'},{'n':'泰国','v':'泰国'},{'n':'其他','v':'其他'}]},
-            {'key':'year','name':'年代','value':[{'n':'全部','v':'0'},{'n':'2026','v':'2026'},{'n':'2025','v':'2025'},{'n':'2024','v':'2024'},{'n':'2023','v':'2023'},{'n':'2022','v':'2022'},{'n':'2021','v':'2021'},{'n':'2020','v':'2020'},{'n':'2019','v':'2019'},{'n':'2018','v':'2018'}]},
-            {'key':'by','name':'排序','value':[{'n':'时间','v':'time'},{'n':'人气','v':'hits'},{'n':'评分','v':'score'}]}
+        '2': [
+            {
+                'key': 'by',
+                'name': '排序',
+                'value': [
+                    {'n':'时间','v':'time'},
+                    {'n':'人气','v':'hits'},
+                    {'n':'评分','v':'score'}
+                ]
+            }
         ],
-        '3':[
-            {'key':'area','name':'地区','value':[{'n':'全部','v':''},{'n':'大陆','v':'大陆'},{'n':'香港','v':'香港'},{'n':'台湾','v':'台湾'},{'n':'美国','v':'美国'},{'n':'韩国','v':'韩国'},{'n':'日本','v':'日本'}]},
-            {'key':'year','name':'年代','value':[{'n':'全部','v':'0'},{'n':'2026','v':'2026'},{'n':'2025','v':'2025'},{'n':'2024','v':'2024'},{'n':'2023','v':'2023'},{'n':'2022','v':'2022'},{'n':'2021','v':'2021'}]},
-            {'key':'by','name':'排序','value':[{'n':'时间','v':'time'},{'n':'人气','v':'hits'},{'n':'评分','v':'score'}]}
+        '3': [
+            {
+                'key': 'by',
+                'name': '排序',
+                'value': [
+                    {'n':'时间','v':'time'},
+                    {'n':'人气','v':'hits'},
+                    {'n':'评分','v':'score'}
+                ]
+            }
         ],
-        '4':[
-            {'key':'area','name':'地区','value':[{'n':'全部','v':''},{'n':'大陆','v':'大陆'},{'n':'日本','v':'日本'},{'n':'美国','v':'美国'}]},
-            {'key':'year','name':'年代','value':[{'n':'全部','v':'0'},{'n':'2026','v':'2026'},{'n':'2025','v':'2025'},{'n':'2024','v':'2024'},{'n':'2023','v':'2023'},{'n':'2022','v':'2022'},{'n':'2021','v':'2021'}]},
-            {'key':'by','name':'排序','value':[{'n':'时间','v':'time'},{'n':'人气','v':'hits'},{'n':'评分','v':'score'}]}
+        '4': [
+            {
+                'key': 'by',
+                'name': '排序',
+                'value': [
+                    {'n':'时间','v':'time'},
+                    {'n':'人气','v':'hits'},
+                    {'n':'评分','v':'score'}
+                ]
+            }
         ],
-        '26':[
-            {'key':'by','name':'排序','value':[{'n':'时间','v':'time'},{'n':'人气','v':'hits'},{'n':'评分','v':'score'}]}
+        '26': [
+            {
+                'key': 'by',
+                'name': '排序',
+                'value': [
+                    {'n':'时间','v':'time'},
+                    {'n':'人气','v':'hits'},
+                    {'n':'评分','v':'score'}
+                ]
+            }
         ],
-        '20':[
-            {'key':'by','name':'排序','value':[{'n':'时间','v':'time'},{'n':'人气','v':'hits'},{'n':'评分','v':'score'}]}
+        '20': [
+            {
+                'key': 'by',
+                'name': '排序',
+                'value': [
+                    {'n':'时间','v':'time'},
+                    {'n':'人气','v':'hits'},
+                    {'n':'评分','v':'score'}
+                ]
+            }
         ],
-        '31':[
-            {'key':'by','name':'排序','value':[{'n':'时间','v':'time'},{'n':'人气','v':'hits'},{'n':'评分','v':'score'}]}
+        '31': [
+            {
+                'key': 'by',
+                'name': '排序',
+                'value': [
+                    {'n':'时间','v':'time'},
+                    {'n':'人气','v':'hits'},
+                    {'n':'评分','v':'score'}
+                ]
+            }
         ]
     };
     return JSON.stringify({
@@ -77,7 +171,7 @@ async function homeVod() {
     const $ = load(html);
     const videos = [];
     
-    $('li').each((i, li) => {
+    $('ul.resize_list li').each((i, li) => {
         const $li = $(li);
         const $a = $li.find('a[href*="/vod-detail-id-"]');
         if ($a.length > 0) {
@@ -96,10 +190,10 @@ async function homeVod() {
                     }
                 }
                 
-                const title = $a.attr('title') || $img.attr('alt') || '';
-                const remarks = $li.find('span').text().trim() || '';
+                const title = $a.attr('title') || $li.find('.sTit').text().trim() || '';
+                const remarks = $li.find('.sDes').text().trim() || '';
                 
-                if (title && !title.includes('搜索') && !title.includes('logo')) {
+                if (title) {
                     videos.push({
                         vod_id: id,
                         vod_name: title,
@@ -124,13 +218,18 @@ async function category(tid, pg, filter, extend) {
     const letter = extend.letter || '';
     const by = extend.by || 'time';
     
-    const link = HOST + '/index.php?m=vod-list-id-' + tid + '-pg-' + pg + '-order--by-' + by + '-class-' + classId + '-year-' + year + '-letter-' + letter + '-area-' + encodeURIComponent(area) + '-lang-.html';
+    let useTypeId = tid;
+    if (classId !== '0') {
+        useTypeId = classId;
+    }
+    
+    const link = HOST + '/vod-list-id-' + useTypeId + '-pg-' + pg + '-order--by-' + by + '-class-' + classId + '-year-' + year + '-letter-' + letter + '-area-' + encodeURIComponent(area) + '-lang-.html';
     
     const html = await request(link);
     const $ = load(html);
     const videos = [];
     
-    $('li').each((i, li) => {
+    $('ul.resize_list li').each((i, li) => {
         const $li = $(li);
         const $a = $li.find('a[href*="/vod-detail-id-"]');
         if ($a.length > 0) {
@@ -149,8 +248,8 @@ async function category(tid, pg, filter, extend) {
                     }
                 }
                 
-                const title = $a.attr('title') || $img.attr('alt') || '';
-                const remarks = $li.find('span').text().trim() || '';
+                const title = $a.attr('title') || $li.find('.sTit').text().trim() || '';
+                const remarks = $li.find('.sDes').text().trim() || '';
                 
                 if (title) {
                     videos.push({
@@ -173,8 +272,6 @@ async function category(tid, pg, filter, extend) {
     
     if (totalMatch) {
         total = parseInt(totalMatch[1]);
-        const limit = 30;
-        pageCount = Math.ceil(total / limit);
     }
     
     if (pageMatch) {
@@ -229,11 +326,11 @@ async function detail(id) {
     const $scripts = $('script');
     $scripts.each((i, script) => {
         const text = $(script).html() || '';
-        if (text.includes("mac_from=")) {
+        if (text.includes('mac_from=')) {
             const match = text.match(/mac_from\s*=\s*['"]([^'"]+)['"]/);
             if (match) macFrom = match[1];
         }
-        if (text.includes("mac_url=")) {
+        if (text.includes('mac_url=')) {
             const match = text.match(/mac_url\s*=\s*['"]([^'"]+)['"]/);
             if (match) macUrl = match[1];
         }
@@ -298,11 +395,11 @@ async function play(flag, id, flags) {
         const $scripts = $('script');
         $scripts.each((i, script) => {
             const text = $(script).html() || '';
-            if (text.includes("mac_from=")) {
+            if (text.includes('mac_from=')) {
                 const match = text.match(/mac_from\s*=\s*['"]([^'"]+)['"]/);
                 if (match) macFrom = match[1];
             }
-            if (text.includes("mac_url=")) {
+            if (text.includes('mac_url=')) {
                 const match = text.match(/mac_url\s*=\s*['"]([^'"]+)['"]/);
                 if (match) macUrl = match[1];
             }
@@ -478,7 +575,7 @@ async function search(wd, quick) {
     const $ = load(html);
     const videos = [];
     
-    $('li').each((i, li) => {
+    $('ul.resize_list li').each((i, li) => {
         const $li = $(li);
         const $a = $li.find('a[href*="/vod-detail-id-"]');
         if ($a.length > 0) {
@@ -497,8 +594,8 @@ async function search(wd, quick) {
                     }
                 }
                 
-                const title = $a.attr('title') || $img.attr('alt') || '';
-                const remarks = $li.find('span').text().trim() || '';
+                const title = $a.attr('title') || $li.find('.sTit').text().trim() || '';
+                const remarks = $li.find('.sDes').text().trim() || '';
                 
                 if (title) {
                     videos.push({
