@@ -272,11 +272,44 @@ async function play(flag, id, flags) {
 // 解密视频URL函数
 function decryptVideoUrl(encryptedUrl) {
     try {
-        for (let offset = 1; offset < 20; offset++) {
+        for (let offset = 1; offset < 30; offset++) {
             try {
                 const testStr = encryptedUrl.substring(offset);
                 const decoded = Buffer.from(testStr, 'base64');
+                const decodedStr = decoded.toString('utf8');
                 
+                // 情况1：检查是否有 URL 编码的内容 (http%3A 或 https%3A)
+                if (decodedStr.includes('http%3A') || decodedStr.includes('https%3A')) {
+                    try {
+                        const urlDecoded = decodeURIComponent(decodedStr);
+                        // 找到 .m3u8 的位置
+                        const m3u8Pos = urlDecoded.indexOf('.m3u8');
+                        if (m3u8Pos !== -1) {
+                            // 找到 URL 开始的位置
+                            const httpPos = urlDecoded.lastIndexOf('http', m3u8Pos);
+                            if (httpPos !== -1) {
+                                const cleanUrl = urlDecoded.substring(httpPos, m3u8Pos + 5);
+                                return cleanUrl;
+                            }
+                        }
+                    } catch (e) {
+                        // 忽略 decodeURIComponent 错误
+                    }
+                }
+                
+                // 情况2：检查是否有完整的 http:// 或 https:// 直接在里面
+                if (decodedStr.includes('http://') || decodedStr.includes('https://')) {
+                    const m3u8Pos = decodedStr.indexOf('.m3u8');
+                    if (m3u8Pos !== -1) {
+                        const httpPos = decodedStr.lastIndexOf('http', m3u8Pos);
+                        if (httpPos !== -1) {
+                            const cleanUrl = decodedStr.substring(httpPos, m3u8Pos + 5);
+                            return cleanUrl;
+                        }
+                    }
+                }
+                
+                // 情况3：原来的逻辑 - 找数字开头的路径
                 let startPos = -1;
                 // 直接找第一个数字字符，并且后面必须跟着至少5个数字
                 for (let i = 0; i < decoded.length - 5; i++) {
