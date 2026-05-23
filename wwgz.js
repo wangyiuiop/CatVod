@@ -221,21 +221,41 @@ async function play(flag, id, flags) {
     const html = await request(HOST + id);
     const $ = load(html);
     
-    let playUrl = '';
-    const $script = $('script');
-    $script.each((i, script) => {
+    // 从页面中提取mac_url变量
+    let macUrl = '';
+    let macFrom = '';
+    const $scripts = $('script');
+    
+    $scripts.each((i, script) => {
         const text = $(script).html() || '';
-        if (text.includes('player_aaaa') || text.includes('url')) {
-            const match = text.match(/url["\s:]+["']([^"']+)["']/);
+        if (text.includes("mac_url=")) {
+            // 匹配 mac_url='...' 或 mac_url="..."
+            const match = text.match(/mac_url\s*=\s*['"]([^'"]+)['"]/);
             if (match) {
-                playUrl = match[1];
+                macUrl = match[1];
+            }
+        }
+        if (text.includes("mac_from=")) {
+            const match = text.match(/mac_from\s*=\s*['"]([^'"]+)['"]/);
+            if (match) {
+                macFrom = match[1];
             }
         }
     });
     
+    // 如果macUrl以$开头，需要分割
+    let videoUrl = macUrl;
+    if (macUrl.includes('$')) {
+        const parts = macUrl.split('$');
+        videoUrl = parts[1] || parts[0]; // 取$后面的部分
+    }
+    
+    // 返回iframe播放器URL，让TVBox加载外部播放器
+    const playerUrl = 'https://api.nmvod.me:520/player/?url=' + encodeURIComponent(videoUrl);
+    
     return JSON.stringify({
-        parse: 0,
-        url: playUrl,
+        parse: 1,
+        url: playerUrl,
         header: {
             'User-Agent': UAMobile,
         }
