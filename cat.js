@@ -1,3 +1,479 @@
+var CatAPI = {
+    baseUrl: 'https://www.ylys.tv',
+    apiUrl: 'https://www.ylys.tv/index.php',
+    
+    request: function(url, options) {
+        options = options || {};
+        options.type = options.type || 'GET';
+        options.dataType = options.dataType || 'json';
+        options.timeout = options.timeout || 30000;
+        
+        return new Promise(function(resolve, reject) {
+            var xhr = new XMLHttpRequest();
+            xhr.open(options.type, url, true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.timeout = options.timeout;
+            
+            xhr.onload = function() {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    try {
+                        var response = JSON.parse(xhr.responseText);
+                        resolve(response);
+                    } catch(e) {
+                        resolve(xhr.responseText);
+                    }
+                } else {
+                    reject(new Error('Request failed with status: ' + xhr.status));
+                }
+            };
+            
+            xhr.onerror = function() {
+                reject(new Error('Network error'));
+            };
+            
+            xhr.ontimeout = function() {
+                reject(new Error('Request timeout'));
+            };
+            
+            if (options.data) {
+                var params = [];
+                for (var key in options.data) {
+                    params.push(key + '=' + encodeURIComponent(options.data[key]));
+                }
+                xhr.send(params.join('&'));
+            } else {
+                xhr.send();
+            }
+        });
+    },
+    
+    getHomePage: function(page, limit) {
+        page = page || 1;
+        limit = limit || 20;
+        var url = this.apiUrl + '/api/vod/list?page=' + page + '&limit=' + limit;
+        
+        return this.request(url).then(function(response) {
+            return response;
+        });
+    },
+    
+    getCategories: function() {
+        var url = this.apiUrl + '/api/type/list';
+        
+        return this.request(url).then(function(response) {
+            return response;
+        });
+    },
+    
+    getCategoryVideos: function(typeId, page, limit, params) {
+        page = page || 1;
+        limit = limit || 20;
+        params = params || {};
+        
+        var data = {
+            type: typeId,
+            page: page,
+            limit: limit
+        };
+        
+        if (params.area) data.area = params.area;
+        if (params.year) data.year = params.year;
+        if (params.letter) data.letter = params.letter;
+        if (params.order) data.order = params.order;
+        if (params.by) data.by = params.by;
+        if (params.class) data.class = params.class;
+        
+        var queryString = [];
+        for (var key in data) {
+            queryString.push(key + '=' + data[key]);
+        }
+        
+        var url = this.apiUrl + '/api/vod/list?' + queryString.join('&');
+        
+        return this.request(url).then(function(response) {
+            return response;
+        });
+    },
+    
+    getVideoDetail: function(vodId) {
+        var url = this.apiUrl + '/api/vod/detail?id=' + vodId;
+        
+        return this.request(url).then(function(response) {
+            return response;
+        });
+    },
+    
+    getVideoPlayer: function(id, sid, nid) {
+        sid = sid || 1;
+        nid = nid || 1;
+        var url = this.apiUrl + '/ajax/player?id=' + id + '&sid=' + sid + '&nid=' + nid;
+        
+        return this.request(url).then(function(response) {
+            return response;
+        });
+    },
+    
+    search: function(keyword, page, limit) {
+        page = page || 1;
+        limit = limit || 20;
+        var url = this.apiUrl + '/api/vod/search?wd=' + encodeURIComponent(keyword) + '&page=' + page + '&limit=' + limit;
+        
+        return this.request(url).then(function(response) {
+            return response;
+        });
+    },
+    
+    getRecommendVideos: function(limit) {
+        limit = limit || 10;
+        return this.getHomePage(1, limit).then(function(response) {
+            if (response.list && response.list.length > 0) {
+                return {
+                    success: true,
+                    data: response.list.slice(0, limit)
+                };
+            }
+            return {
+                success: false,
+                message: 'No recommendations available'
+            };
+        });
+    },
+    
+    getHotVideos: function(limit) {
+        limit = limit || 10;
+        return this.getCategoryVideos(1, 1, limit, {order: 'hits'}).then(function(response) {
+            return response;
+        });
+    },
+    
+    getLatestVideos: function(limit) {
+        limit = limit || 10;
+        return this.getCategoryVideos(1, 1, limit, {order: 'time'}).then(function(response) {
+            return response;
+        });
+    },
+    
+    buildCategoryUrl: function(typeId, params) {
+        params = params || {};
+        var url = this.baseUrl + '/vodshow/' + typeId;
+        
+        var segments = [
+            params.area || '',
+            params.year || '',
+            params.letter || '',
+            params.order || '',
+            params.by || '',
+            params.class || ''
+        ];
+        
+        return url + '-' + segments.join('-') + '/';
+    },
+    
+    buildDetailUrl: function(vodId) {
+        return this.baseUrl + '/voddetail/' + vodId + '/';
+    },
+    
+    buildPlayUrl: function(vodId, sid, nid) {
+        sid = sid || 1;
+        nid = nid || 1;
+        return this.baseUrl + '/play/' + vodId + '-' + sid + '-' + nid + '/';
+    },
+    
+    buildSearchUrl: function(keyword) {
+        return this.baseUrl + '/vodsearch/' + encodeURIComponent(keyword) + '/';
+    }
+};
+
+var CatUI = {
+    createVideoCard: function(video, options) {
+        options = options || {};
+        var html = '<div class="video-card" style="' + (options.style || '') + '">';
+        html += '<a href="' + (video.detail_url || CatAPI.buildDetailUrl(video.vod_id)) + '">';
+        html += '<div class="video-cover">';
+        html += '<img src="' + video.vod_pic + '" alt="' + video.vod_name + '" loading="lazy">';
+        html += '<span class="video-tag">' + (video.vod_remarks || '') + '</span>';
+        html += '</div>';
+        html += '<div class="video-info">';
+        html += '<h3 class="video-title">' + video.vod_name + '</h3>';
+        html += '<p class="video-subtitle">' + (video.vod_sub || '') + '</p>';
+        html += '</div>';
+        html += '</a>';
+        html += '</div>';
+        return html;
+    },
+    
+    createCategoryList: function(categories) {
+        var html = '<div class="category-list">';
+        if (categories && categories.length > 0) {
+            for (var i = 0; i < categories.length; i++) {
+                var cat = categories[i];
+                html += '<a href="' + CatAPI.buildCategoryUrl(cat.type_id) + '" class="category-item">';
+                html += '<span class="category-icon">' + (cat.type_icon || '📁') + '</span>';
+                html += '<span class="category-name">' + cat.type_name + '</span>';
+                html += '</a>';
+            }
+        }
+        html += '</div>';
+        return html;
+    },
+    
+    createVideoGrid: function(videos, options) {
+        options = options || {};
+        var html = '<div class="video-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(' + (options.columnWidth || '200px') + ',1fr));gap:' + (options.gap || '20px') + ';padding:' + (options.padding || '20px') + ';">';
+        if (videos && videos.length > 0) {
+            for (var i = 0; i < videos.length; i++) {
+                html += this.createVideoCard(videos[i], {
+                    style: 'cursor:pointer;transition:transform 0.3s;'
+                });
+            }
+        }
+        html += '</div>';
+        return html;
+    },
+    
+    createPagination: function(currentPage, totalPages, onPageChange) {
+        var html = '<div class="pagination" style="display:flex;justify-content:center;gap:10px;padding:20px;">';
+        
+        if (currentPage > 1) {
+            html += '<button class="page-btn" data-page="' + (currentPage - 1) + '">上一页</button>';
+        }
+        
+        var startPage = Math.max(1, currentPage - 2);
+        var endPage = Math.min(totalPages, currentPage + 2);
+        
+        for (var i = startPage; i <= endPage; i++) {
+            var active = i === currentPage ? 'background:#007bff;color:#fff;' : '';
+            html += '<button class="page-btn" data-page="' + i + '" style="' + active + '">' + i + '</button>';
+        }
+        
+        if (currentPage < totalPages) {
+            html += '<button class="page-btn" data-page="' + (currentPage + 1) + '">下一页</button>';
+        }
+        
+        html += '</div>';
+        return html;
+    },
+    
+    createSearchBar: function(containerId, options) {
+        options = options || {};
+        var container = document.getElementById(containerId);
+        if (!container) {
+            console.error('Search container not found:', containerId);
+            return;
+        }
+        
+        var html = '<div class="search-bar" style="display:flex;gap:10px;padding:10px;">';
+        html += '<input type="text" class="search-input" placeholder="' + (options.placeholder || '搜索视频...') + '" style="flex:1;padding:10px;border:1px solid #ddd;border-radius:4px;">';
+        html += '<button class="search-btn" style="padding:10px 20px;background:#007bff;color:#fff;border:none;border-radius:4px;cursor:pointer;">搜索</button>';
+        html += '</div>';
+        
+        container.innerHTML = html;
+        
+        var input = container.querySelector('.search-input');
+        var button = container.querySelector('.search-btn');
+        
+        var searchHandler = function() {
+            var keyword = input.value.trim();
+            if (keyword && options.onSearch) {
+                options.onSearch(keyword);
+            }
+        };
+        
+        button.onclick = searchHandler;
+        input.onkeypress = function(e) {
+            if (e.key === 'Enter') {
+                searchHandler();
+            }
+        };
+    },
+    
+    createHomePage: function(containerId, options) {
+        options = options || {};
+        var container = document.getElementById(containerId);
+        if (!container) {
+            console.error('Home container not found:', containerId);
+            return;
+        }
+        
+        var self = this;
+        
+        container.innerHTML = '<div class="loading" style="text-align:center;padding:50px;">加载中...</div>';
+        
+        CatAPI.getRecommendVideos(options.limit || 12).then(function(result) {
+            if (result.success && result.data) {
+                var html = '<div class="home-page">';
+                html += '<div class="section-title" style="font-size:24px;font-weight:bold;padding:20px;">热门推荐</div>';
+                html += self.createVideoGrid(result.data, options.gridOptions);
+                html += '</div>';
+                container.innerHTML = html;
+                
+                if (options.onVideoClick) {
+                    var cards = container.querySelectorAll('.video-card');
+                    cards.forEach(function(card, index) {
+                        card.onclick = function() {
+                            options.onVideoClick(result.data[index]);
+                        };
+                    });
+                }
+            } else {
+                container.innerHTML = '<div class="error" style="text-align:center;padding:50px;color:#999;">暂无推荐内容</div>';
+            }
+        }).catch(function(error) {
+            container.innerHTML = '<div class="error" style="text-align:center;padding:50px;color:#999;">加载失败: ' + error.message + '</div>';
+        });
+    },
+    
+    createCategoryPage: function(containerId, typeId, options) {
+        options = options || {};
+        var container = document.getElementById(containerId);
+        if (!container) {
+            console.error('Category container not found:', containerId);
+            return;
+        }
+        
+        var self = this;
+        var currentPage = 1;
+        var totalPages = 1;
+        
+        container.innerHTML = '<div class="loading" style="text-align:center;padding:50px;">加载中...</div>';
+        
+        function loadVideos(page) {
+            CatAPI.getCategoryVideos(typeId, page, options.limit || 20, options.params || {}).then(function(result) {
+                if (result.list && result.list.length > 0) {
+                    totalPages = result.pagecount || 1;
+                    currentPage = result.page || page;
+                    
+                    var html = '<div class="category-page">';
+                    html += '<div class="section-title" style="font-size:24px;font-weight:bold;padding:20px;">' + (options.title || '分类内容') + '</div>';
+                    html += self.createVideoGrid(result.list, options.gridOptions);
+                    html += self.createPagination(currentPage, totalPages);
+                    html += '</div>';
+                    container.innerHTML = html;
+                    
+                    var pageButtons = container.querySelectorAll('.page-btn');
+                    pageButtons.forEach(function(btn) {
+                        btn.onclick = function() {
+                            var pageNum = parseInt(this.getAttribute('data-page'));
+                            loadVideos(pageNum);
+                        };
+                    });
+                    
+                    if (options.onVideoClick) {
+                        var cards = container.querySelectorAll('.video-card');
+                        cards.forEach(function(card, index) {
+                            card.onclick = function() {
+                                options.onVideoClick(result.list[index]);
+                            };
+                        });
+                    }
+                } else {
+                    container.innerHTML = '<div class="empty" style="text-align:center;padding:50px;color:#999;">该分类暂无内容</div>';
+                }
+            }).catch(function(error) {
+                container.innerHTML = '<div class="error" style="text-align:center;padding:50px;color:#999;">加载失败: ' + error.message + '</div>';
+            });
+        }
+        
+        loadVideos(1);
+    },
+    
+    createSearchPage: function(containerId, keyword, options) {
+        options = options || {};
+        var container = document.getElementById(containerId);
+        if (!container) {
+            console.error('Search container not found:', containerId);
+            return;
+        }
+        
+        var self = this;
+        var currentPage = 1;
+        var totalPages = 1;
+        
+        container.innerHTML = '<div class="loading" style="text-align:center;padding:50px;">搜索"' + keyword + '"...</div>';
+        
+        function loadSearchResults(page) {
+            CatAPI.search(keyword, page, options.limit || 20).then(function(result) {
+                if (result.list && result.list.length > 0) {
+                    totalPages = result.pagecount || 1;
+                    currentPage = result.page || page;
+                    
+                    var html = '<div class="search-page">';
+                    html += '<div class="section-title" style="font-size:24px;font-weight:bold;padding:20px;">搜索结果: "' + keyword + '" (共' + result.total + '条)</div>';
+                    html += self.createVideoGrid(result.list, options.gridOptions);
+                    html += self.createPagination(currentPage, totalPages);
+                    html += '</div>';
+                    container.innerHTML = html;
+                    
+                    var pageButtons = container.querySelectorAll('.page-btn');
+                    pageButtons.forEach(function(btn) {
+                        btn.onclick = function() {
+                            var pageNum = parseInt(this.getAttribute('data-page'));
+                            loadSearchResults(pageNum);
+                        };
+                    });
+                    
+                    if (options.onVideoClick) {
+                        var cards = container.querySelectorAll('.video-card');
+                        cards.forEach(function(card, index) {
+                            card.onclick = function() {
+                                options.onVideoClick(result.list[index]);
+                            };
+                        });
+                    }
+                } else {
+                    container.innerHTML = '<div class="empty" style="text-align:center;padding:50px;color:#999;">未找到"' + keyword + '"相关视频</div>';
+                }
+            }).catch(function(error) {
+                container.innerHTML = '<div class="error" style="text-align:center;padding:50px;color:#999;">搜索失败: ' + error.message + '</div>';
+            });
+        }
+        
+        loadSearchResults(1);
+    }
+};
+
+var CatRouter = {
+    routes: {},
+    currentRoute: null,
+    
+    init: function() {
+        var self = this;
+        
+        window.onpopstate = function() {
+            self.handleRoute();
+        };
+        
+        this.handleRoute();
+    },
+    
+    addRoute: function(path, handler) {
+        this.routes[path] = handler;
+    },
+    
+    navigate: function(path) {
+        history.pushState(null, '', path);
+        this.handleRoute();
+    },
+    
+    handleRoute: function() {
+        var path = window.location.pathname;
+        
+        for (var route in this.routes) {
+            var match = path.match(new RegExp('^' + route.replace(/:[^/]+/g, '([^/]+)') + '$'));
+            if (match) {
+                this.currentRoute = route;
+                var params = match.slice(1);
+                this.routes[route].apply(this, params);
+                return;
+            }
+        }
+        
+        if (this.routes['*']) {
+            this.routes['*']();
+        }
+    }
+};
+
 var CatPlayer = {
     base64EncodeChars: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
     base64DecodeChars: new Array(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,62,-1,-1,-1,63,52,53,54,55,56,57,58,59,60,61,-1,-1,-1,-1,-1,-1,-1,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,-1,-1,-1,-1,-1,-1,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,-1,-1,-1,-1,-1),
@@ -269,5 +745,15 @@ var CatPlayer = {
 };
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = CatPlayer;
+    module.exports = {
+        CatPlayer: CatPlayer,
+        CatAPI: CatAPI,
+        CatUI: CatUI,
+        CatRouter: CatRouter
+    };
+} else if (typeof window !== 'undefined') {
+    window.CatPlayer = CatPlayer;
+    window.CatAPI = CatAPI;
+    window.CatUI = CatUI;
+    window.CatRouter = CatRouter;
 }
