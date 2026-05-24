@@ -12,7 +12,7 @@ class Spider(Spider):
     
     def __init__(self):
         self.url = 'https://www.lmm85.com'
-        self.session = None
+        self.cookie_jar = {}
         self.header = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
@@ -26,76 +26,96 @@ class Spider(Spider):
             'Sec-Fetch-User': '?1',
             'Cache-Control': 'max-age=0'
         }
-        self.search_header = {
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-            'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
-            'Referer': self.url + '/',
-            'Sec-Fetch-Dest': 'document',
-            'Sec-Fetch-Mode': 'navigate',
-            'Sec-Fetch-Site': 'same-origin'
-        }
     
-    def _get_session(self):
-        if self.session is None:
+    def _init_session(self):
+        if not hasattr(self, '_session_initialized'):
             try:
                 import requests
-                self.session = requests.Session()
-                self.session.headers.update(self.header)
-                # 先访问主页获取初始cookie
-                self.session.get(self.url, headers=self.header, timeout=10)
-                time.sleep(random.uniform(1, 2))
-            except:
-                self.session = None
-        return self.session
+                self._http_session = requests.Session()
+                self._http_session.headers.update(self.header)
+                try:
+                    r = self._http_session.get(self.url, timeout=10)
+                    self.cookie_jar = dict(r.cookies)
+                    time.sleep(random.uniform(1, 2))
+                except:
+                    pass
+                self._session_initialized = True
+            except ImportError:
+                self._session_initialized = False
     
-    def _merge_headers(self, specific_header):
-        merged = self.header.copy()
-        merged.update(specific_header)
-        return merged
+    def fetch(self, url, headers=None):
+        """重写fetch方法，维护Cookie"""
+        self._init_session()
+        
+        if hasattr(self, '_http_session') and self._http_session:
+            try:
+                req_headers = self.header.copy()
+                if headers:
+                    req_headers.update(headers)
+                
+                if 'Referer' not in req_headers:
+                    req_headers['Referer'] = self.url + '/'
+                
+                if 'Sec-Fetch-Site' not in req_headers:
+                    req_headers['Sec-Fetch-Site'] = 'same-origin'
+                
+                response = self._http_session.get(url, headers=req_headers, timeout=10)
+                self.cookie_jar = dict(response.cookies)
+                
+                time.sleep(random.uniform(0.5, 1.5))
+                
+                return type('Response', (), {
+                    'text': response.text,
+                    'cookies': dict(response.cookies),
+                    'headers': dict(response.headers)
+                })()
+            except Exception as e:
+                print(f"[错误] 请求失败: {str(e)}")
+                return type('Response', (), {'text': '', 'cookies': {}, 'headers': {}})()
+        else:
+            import urllib.request
+            try:
+                req = urllib.request.Request(url, headers=self.header)
+                with urllib.request.urlopen(req, timeout=10) as response:
+                    html = response.read().decode('utf-8', errors='ignore')
+                    return type('Response', (), {'text': html, 'cookies': {}, 'headers': {}})()
+            except Exception as e:
+                print(f"[错误] 请求失败: {str(e)}")
+                return type('Response', (), {'text': '', 'cookies': {}, 'headers': {}})()
 
     def homeContent(self, filter):
         c = [('国产动漫','guochandongman'),('动态漫画','dongtaiman'),('日本动漫','ribendongman'),('欧美动漫','oumeidongman'),('国产动画电影','guochandonghuadianying'),('日本动画电影','ribendonghuadianying'),('欧美动画电影','oumeidonghuadianying'),('日本特摄剧','teshepian')]
         return {'class': [{'type_name': n, 'type_id': i} for n, i in c]}
 
     def homeVideoContent(self):
-        session = self._get_session()
         try:
-            if session:
-                response = session.get(self.url, headers=self._merge_headers({
-                    'Referer': 'https://www.google.com/',
-                    'Sec-Fetch-Site': 'cross-site'
-                }), timeout=10)
-                time.sleep(random.uniform(0.5, 1.5))
-                return {'list': self._p(response.text)}
-            return {'list': []}
+            time.sleep(random.uniform(0.5, 1))
+            response = self.fetch(self.url, headers={
+                'Referer': 'https://www.google.com/',
+                'Sec-Fetch-Site': 'cross-site'
+            })
+            return {'list': self._p(response.text)}
         except: return {'list': []}
 
     def categoryContent(self, tid, pg, filter, extend):
-        session = self._get_session()
         try:
             u = f'{self.url}/type/{tid}.html' if pg == '1' else f'{self.url}/type/{tid}_{pg}.html'
-            if session:
-                response = session.get(u, headers=self._merge_headers({
-                    'Referer': self.url + '/',
-                    'Sec-Fetch-Site': 'same-origin'
-                }), timeout=10)
-                time.sleep(random.uniform(0.3, 1))
-                return {'list': self._p(response.text), 'page': int(pg), 'pagecount': 9999, 'limit': 20, 'total': 9999}
-            return {'list': []}
+            time.sleep(random.uniform(0.3, 1))
+            response = self.fetch(u, headers={
+                'Referer': self.url + '/',
+                'Sec-Fetch-Site': 'same-origin'
+            })
+            return {'list': self._p(response.text), 'page': int(pg), 'pagecount': 9999, 'limit': 20, 'total': 9999}
         except: return {'list': []}
 
     def detailContent(self, ids):
-        session = self._get_session()
         try:
             detail_url = f'{self.url}/detail/{ids[0]}.html'
-            if session:
-                h = session.get(detail_url, headers=self._merge_headers({
-                    'Referer': self.url + '/',
-                    'Sec-Fetch-Site': 'same-origin'
-                }), timeout=10).text
-                time.sleep(random.uniform(0.5, 1.5))
-            else:
-                return {'list': []}
+            h = self.fetch(detail_url, headers={
+                'Referer': self.url + '/',
+                'Sec-Fetch-Site': 'same-origin'
+            }).text
+            time.sleep(random.uniform(0.5, 1.5))
             
             v = {'vod_id': ids[0], 'vod_name': '', 'vod_pic': '', 'vod_type': '', 'vod_year': '', 'vod_area': '', 'vod_remarks': '', 'vod_actor': '', 'vod_director': '', 'vod_content': ''}
             m1 = re.search(r'<h1 class="page-title">(.*?)</h1>', h)
@@ -116,47 +136,38 @@ class Spider(Spider):
         except: return {'list': []}
 
     def searchContent(self, key, quick, pg="1"):
-        session = self._get_session()
         try:
-            # 先访问首页，保持cookie链
-            if session:
-                session.get(self.url, headers=self._merge_headers({
-                    'Referer': 'https://www.google.com/',
-                    'Sec-Fetch-Site': 'cross-site'
-                }), timeout=10)
-                time.sleep(random.uniform(0.5, 1))
+            self.fetch(self.url, headers={
+                'Referer': 'https://www.google.com/',
+                'Sec-Fetch-Site': 'cross-site'
+            })
+            time.sleep(random.uniform(0.5, 1))
             
             search_url = f'{self.url}/vod/search.html?wd={key}&page={pg}'
-            if session:
-                response = session.get(search_url, headers=self._merge_headers({
-                    'Referer': self.url + '/',
-                    'Sec-Fetch-Dest': 'document',
-                    'Sec-Fetch-Mode': 'navigate',
-                    'Sec-Fetch-Site': 'same-origin'
-                }), timeout=10)
-                time.sleep(random.uniform(1, 2))
-                
-                # 检查是否返回验证码页面
-                html = response.text
-                if self._is_captcha_page(html):
-                    print(f"[警告] 搜索关键词 '{key}' 触发了验证码")
-                    # 返回空列表或缓存结果
-                    return {'list': []}
-                
-                return {'list': self._p(html)}
-            return {'list': []}
+            response = self.fetch(search_url, headers={
+                'Referer': self.url + '/',
+                'Sec-Fetch-Dest': 'document',
+                'Sec-Fetch-Mode': 'navigate',
+                'Sec-Fetch-Site': 'same-origin'
+            })
+            time.sleep(random.uniform(1, 2))
+            
+            html = response.text
+            if self._is_captcha_page(html):
+                print(f"[警告] 搜索关键词 '{key}' 触发了验证码")
+                return {'list': []}
+            
+            return {'list': self._p(html)}
         except Exception as e:
             print(f"[错误] 搜索失败: {str(e)}")
             return {'list': []}
 
     def _is_captcha_page(self, html):
-        """检测是否返回了验证码页面"""
-        captcha_keywords = ['验证码', 'captcha', '验证失败', '访问异常', '请输入验证码', 
-                          '安全验证', '人机验证', '点击验证', '滑块验证', 'captcha']
+        captcha_keywords = ['验证码', 'captcha', '验证失败', '请输入验证码', 
+                          '安全验证', '人机验证', '点击验证', '滑块验证']
         html_lower = html.lower()
         for keyword in captcha_keywords:
             if keyword in html_lower:
-                # 进一步检查是否是真正的验证码页面
                 if any(x in html_lower for x in ['verify', 'check', 'token', 'challenge']):
                     return True
         return False
