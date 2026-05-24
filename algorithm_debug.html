@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" /> 
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="renderer" content="webkit">
+<meta http-equiv="X-UA-Compatible" content="IE=11" />
+<title>万影网apoapi云解析</title>
+<style type="text/css">body,html,.content{background-color:black;padding: 0;margin: 0;width:100%;height:100%;color:#999;}</style>
+<script src="//registry.npmmirror.com/jquery/3.6.0/files/dist/jquery.min.js"></script>
+<script src="/jsplayer/a.js"></script>
+<script src="/jsplayer/b.js"></script>
+<script type="text/javascript" src="/jsplayer/ckplayer.js" charset="utf-8"></script>
+<link rel="stylesheet" href="//registry.npmmirror.com/dplayer/1.25.0/files/dist/DPlayer.min.css">
+<script type="text/javascript" src="//registry.npmmirror.com/dplayer/1.25.0/files/dist/DPlayer.min.js" charset="utf-8"></script>
+<script type="text/javascript" src="//registry.npmmirror.com/hls.js/0.10.1/files/dist/hls.min.js"></script>
+<script type="text/javascript" src="//registry.npmmirror.com/blueimp-md5/2.12.0/files/js/md5.min.js"></script>
+</head>
+<body style="overflow-y:hidden;">
+<div id="loading" class="content" style="font-weight:bold;padding-top:90px;" align="center">正在加载播放中,请稍等...</div>
+<div id="a1" class="content" style="display:none;"></div>
+<div id="error" class="content" style="display:none;font-weight:bold;padding-top:90px;" align="center"></div>
+<input type="hidden" id="hdMd5" value="EFBFCB31D5BACE6BB5793A529254424E" />
+<script type="text/javascript">
+var weParserParams;
+var iqiyicip;
+function player(){
+	$.post("", {"vid": "DU_o0Y 2nWJZPZ/xBC6YeWi5vw6b2crTApnQYiUtV 6F14=","type": "okjx","sing": "58f03c01251576df2f1bad8e73ab96c3","token":"ACcHO1c9UiRQMQVtUSIBbQA5WjFSbgdqUGADal85UAxdMVU3Vm0GPFFlVWdWYFplVDQNMA==34","token1":"ACcHO1c9UiRQMQVtUSIBbQA5WjFSbgdqUGADal85UAxdMVU3Vm0GPFFlVWdWYFplVDQNMA==349","token2":"ACcHO1c9UiRQMQVtUSIBbQA5WjFSbgdqUGADal85UAxdMVU3Vm0GPFFlVWdWYFplVDQNMA==347","token3":"ACcHO1c9UiRQMQVtUSIBbQA5WjFSbgdqUGADal85UAxdMVU3Vm0GPFFlVWdWYFplVDQNMA==348","t":"241","ti":1779620271},
+	function(data){
+		if(data['msg'] == 200){
+			switch(data['site']){
+				case 'sohu':
+					var rptImg = document.createElement("img");
+					rptImg.src = '//mb.hd.sohu.com.cn/mc.gif?uid='+data['param']['uid']+'&url=1002&value=&memo=%7B%22status%22%3A%220%22%7D&passport=&mtype=12&ltype=0&cv=3.7.0&mos=3&mosv=10.0.15063.674&pro=1&mfo=To+Be+Filled+By+O.E.M.&mfov=To+Be+Filled+By+O.E.M.&webtype=wifi&vid=&time='+Math.round(new Date().getTime()/1000)+'&type=&channelid=419&sim=0&playlistid=&catecode=&preid=&newuser=0&enterid=0&startid='+Math.round(new Date().getTime()/1000);
+				break;
+			}
+			var isiPad = navigator.userAgent.match(/iPad|iPhone|Android|Linux|iPod/i) != null;
+			if(data['ext']=='link'){
+				document.getElementById('a1').innerHTML = '<iframe width="100%" height="100%" allowFullScreen="true" allowTransparency="true" frameborder="0" scrolling="no" src="'+data['url']+'"></iframe>';
+			}else if(data['ext']=='link301'){
+				document.getElementById('a1').innerHTML = '<meta http-equiv="refresh" content="0; url='+data['url']+'">';
+			}else if(isiPad || data['ext']=='h5'){
+				if(data['ext']=='xml_client'){
+					weParserParams=data;
+					var weParserJS = document.createElement("script");
+					weParserJS.type = "text/javascript";
+					weParserJS.src = data['weparser_js_url'];
+					document.getElementsByTagName("head")[0].appendChild(weParserJS);
+				}else{
+					document.getElementById('a1').innerHTML = '<video src="'+data['url']+'" controls="controls" autoplay="autoplay" width="100%" height="100%" poster="image/loading_wap.gif"></video>';
+				}
+			}else if(data['ext']=='mp4'){
+				var uaAutoScroll = navigator.userAgent.toLowerCase();
+				if (uaAutoScroll.indexOf("msie") > -1 || uaAutoScroll.indexOf("rv:11") > -1) {
+					var flashvars={f:data['url'],c:0,p:1,v:80,h:1,e:0,my_title:GetQueryString('title')};
+					var params={bgcolor:'#FFF',allowFullScreen:true,allowScriptAccess:'always',wmode:'transparent'};
+					CKobject.embedSWF('ckplayer/ckplayer.swf','a1','ckplayer_a1','100%','100%',flashvars,params);
+				}else{
+					var dplayer = new DPlayer({
+						element: document.getElementById("a1"),
+						autoplay: true,
+						video: {
+							url: data['url'],
+							type: 'normal',
+                            pic: 'https://cbu01.alicdn.com/img/ibank/2019/694/265/11144562496.jpg'
+						}
+					});
+				}
+			}else if(data['ext']=='hls' || data['ext']=='hls_list'){
+				var dplayer = new DPlayer({
+					element: document.getElementById("a1"),
+					autoplay: true,
+					video: {
+						url: decodeURIComponent(data['url']),
+						type: 'hls'
+					}
+				});
+			}else if(data['ext']=='client_parse'){
+				
+			}else{
+				if(data['ext']=='m3u8' || data['ext']=='m3u8_list' || data['ext']=='m3u8_list_youku' || data['ext']=='m3u8_list_iqiyi'){
+					var flashvars={f:'/ckplayer/m3u8.swf',a:data['url'],c:0,s:4,lv:0,p:1,v:100,b:1,e:0,my_title:GetQueryString('title')}
+				}else if(data['ext']=='xml'){
+					var flashvars={f:data['url'],s:2,c:0,p:1,v:100,b:1,e:0,h:4,e:0,my_title:GetQueryString('title')};
+				}else if(data['ext']=='xml_client'){
+					var flashvars={f:data['url'],s:2,h:3,c:0,p:1,v:100,b:1,e:0,my_title:GetQueryString('title')};
+				}
+				var params={bgcolor:'#FFF',allowFullScreen:true,allowScriptAccess:'always',wmode:'transparent'};
+				CKobject.embedSWF('ckplayer/ckplayer.swf','a1','ckplayer_a1','100%','100%',flashvars,params);
+			}
+			$('#loading').hide();
+			$('#a1').show();
+			return false;
+		}else{
+			$('#loading').hide();
+			$('#a1').hide();
+			$('#error').show();
+			if(data['msg']){
+				$('#error').html(data['msg']);	
+			}else{
+				$('#error').html('亲!视频没有播放出来,请刷新一下!');	
+			}
+		}
+	},"json");
+}
+if(location.href.indexOf('#')>0 && location.href.indexOf('bilibili')){
+	location.href = location.href.replace('#','_');
+}else{
+	player();
+}
+
+function playerstop(){
+	var next =  location.href.toLowerCase().split('next=');
+	if(next.length>1 && next[1].indexOf('http')==0){
+		parent.location.href=next[1];
+	}else if(next.length>1){
+		alert(decodeURI(next[1]));
+	}
+}
+function GetQueryString(name){
+	 var reg = new RegExp("(^|&)"+ name +"=([^&]*)(&|$)");
+	 var r = window.location.search.substr(1).match(reg);
+	 if(r!=null)return  unescape(r[2]); return null;
+}
+function getiqiyiip(){
+	$.get("http://dx.data.video.qiyi.com/v.mp4", function(cdnip){
+		var sip = cdnip.match(/http:\/\/([^\"]*)\/v.mp4/);
+		iqiyicip = sip[1];
+		player();
+	});
+}
+</script>
+
+</body>
+</html>
