@@ -25,7 +25,9 @@ async function request(reqUrl, agentSp, extHeader) {
         headers: headers,
     });
 
-    return res.content;
+    let content = res.content || res.body || res.data || '';
+    content = String(content).replace(/`/g, '');
+    return content;
 }
 
 async function init(cfg) {
