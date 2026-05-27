@@ -375,6 +375,12 @@ async function search(wd, quick, pg) {
             });
         });
 
+        // 清理所有视频数据中的反引号
+        videos = videos.map(v => ({
+            ...v,
+            vod_pic: v.vod_pic.replace(/`/g, '').trim()
+        }));
+
         const hasMore = $('.page-next').length > 0 || $('a:contains("下一页")').length > 0;
 
         return JSON.stringify({
