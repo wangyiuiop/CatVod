@@ -334,6 +334,8 @@ async function search(wd, quick, pg) {
             if (img && img.length > 0) {
                 pic = img.attr('data-original') || img.attr('data-src') || img.attr('src') || '';
             }
+            // 清理图片URL：移除反引号
+            pic = pic.replace(/`/g, '').trim();
             
             // 提取备注：尝试多种方式
             let remarks = '';
@@ -341,19 +343,27 @@ async function search(wd, quick, pg) {
             remarks = $item.find('.module-item-note').text().trim();
             // 方法2：查找第一个包含年份或集数的链接
             if (!remarks) {
-                const noteLinks = $item.find('a').filter((_, el) => {
+                $item.find('a').each((_, el) => {
+                    if (remarks) return;
                     const text = $(el).text().trim();
-                    return text.includes('集') || text.includes('HD') || text.match(/^\d+$/);
-                }).first();
-                if (noteLinks && noteLinks.length > 0) {
-                    remarks = noteLinks.text().trim();
-                }
+                    if (text.includes('集') || text.includes('HD') || text.includes('完结') || text.match(/更新/)) {
+                        remarks = text;
+                    }
+                });
             }
             // 方法3：查找任何备注类元素
             if (!remarks) {
                 const noteEl = $item.find('[class*="note"], [class*="serial"], [class*="remark"]').first();
                 if (noteEl && noteEl.length > 0) {
                     remarks = noteEl.text().trim();
+                }
+            }
+            // 方法4：查找包含年份信息的文本
+            if (!remarks) {
+                const yearText = $item.text();
+                const yearMatch = yearText.match(/(\d{4}\/[^\/\n]+)/);
+                if (yearMatch) {
+                    remarks = yearMatch[1];
                 }
             }
             
