@@ -81,11 +81,27 @@ class Spider(Spider):
         pg = pg or "1"
         pg_int = int(pg)
         
-        # 修复的URL格式：使用 /vodtype/{tid}-{pg}.html
-        if pg_int > 1:
-            link = f"{self.url}/vodtype/{tid}-{pg}.html"
+        # 从extend中获取筛选参数
+        # 注意：extend中的'class'键对应的是筛选类型（剧情），不是分类ID
+        area = extend.get('area', '') if extend else ''
+        by = extend.get('by', 'time') if extend else 'time'
+        cls = extend.get('class', '') if extend else ''
+        lang = extend.get('lang', '') if extend else ''
+        letter = extend.get('letter', '') if extend else ''
+        year = extend.get('year', '') if extend else ''
+        
+        # 判断是否有任何筛选条件
+        has_filter = any([area, by != 'time', cls, lang, letter, year])
+        
+        if has_filter:
+            # 有筛选条件，使用vodshow格式
+            link = f"{self.url}/vodshow/{tid}-{area}-{by}-{cls}-{lang}-{letter}---{pg}---{year}.html"
         else:
-            link = f"{self.url}/vodtype/{tid}.html"
+            # 无筛选条件，根据页码决定URL格式
+            if pg_int > 1:
+                link = f"{self.url}/vodtype/{tid}-{pg}.html"
+            else:
+                link = f"{self.url}/vodtype/{tid}.html"
         
         try:
             res = requests.get(link, headers=self.headers, timeout=10)
