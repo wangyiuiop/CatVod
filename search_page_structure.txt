@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <title>
+   良陈美锦搜索结果 - 追光影视-海量最新优质国内影视剧资源的网站
+  </title>
+  <meta content="良陈美锦搜索结果" name="keywords"/>
+  <meta content="良陈美锦搜索结果" name="description"/>
+  <meta charset="utf-8"/>
+  <meta content="webkit" name="renderer"/>
+  <meta content="webkit" name="force-rendering"/>
+  <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible"/>
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"/>
+  <script>
+   var maccms={"path":"","mid":"1","url":"www.test.cn","wapurl":"wap.test.cn","mob_status":"0"};
+  </script>
+  <link href="/upload/mxprocms/20260516-1/13e870ef6e073a5f5a56509721ba4da4.png" rel="shortcut icon"/>
+  <link href="/mxtheme/css/style.css" rel="stylesheet" type="text/css"/>
+  <link href="/mxtheme/css/black.css" id="cssFile" rel="stylesheet" type="text/css"/>
+  <script>
+   function getCookieItem(name){ var arr = document.cookie.match(new RegExp("(^| )"+name+"=([^;]*)(;|$)")); if(arr != null){ return decodeURIComponent(arr[2]); return null; } } let cookieItem = getCookieItem('mx_style') if(cookieItem && cookieItem !=='white') { document.querySelector('#cssFile').href = '/mxtheme/css/'+getCookieItem('mx_style')+'.css' }
+  </script>
+  <link href="/mxtheme/css/swiper-bundle.min.css" rel="stylesheet" type="text/css"/>
+  <script src="/mxtheme/js/jquery.min.js">
+  </script>
+  <script src="/mxtheme/js/home.js">
+  </script>
+  <script src="/mxtheme/js/jquery.lazyload.js">
+  </script>
+  <script src="/static/js/jquery.cookie.js">
+  </script>
+  <script src="/static/js/jquery.clipboard.js">
+  </script>
+  <script src="/mxtheme/js/jquery.qrcode.min.js" type="text/javascript">
+  </script>
+  <script src="/mxtheme/js/script.js">
+  </script>
+  <script src="/mxtheme/js/swiper-bundle.min.js">
+  </script>
+  <script src="/mxtheme/js/layer.min.js">
+  </script>
+  <link href="/mxtheme/js/theme/default/layer.css" rel="stylesheet" type="text/css"/>
+  <style>
+  </style>
+  <script>
+   $(function(){$('#searchbutton').click(function() {if ($('.search-input').val() == '') { layer.msg('请输入搜索关键词！',{time:1000,shade: 0.8}); $(".search-input").focus(); return false; }})});
+  </script>
+  <style>
+   @media (max-width: 559px){ .homepage .navbar {width: calc(100vw - 91px);} .navbar.open, .page .navbar {width: calc(100vw - 135px);}.side-op{ width:130px;}.homepage .side-op.open .header-op-search{display:block;}}
+  </style>
+ </head>
+ <body>
+  <div class="page list">
+   <div class="header">
+    <div class="header-box">
+     <div class="logo">
+      <a href="/" title="追光影视-海量最新优质国内影视剧资源的网站">
+       <img alt="追光影视-海量最新优质国内影视剧资源的网站" class="logo2" src="/upload/mxprocms/20260515-1/e85ff62cf8cd9f2d2778f6f679c7f6ba.png"/>
+       <img class="logo1" src="/upload/mxprocms/20260515-1/78ad29e0348287d939c550a83db1834f.png"/>
+      </a>
+     </div>
+     <div class="search-box">
+      <div class="searchbar-main">
+       <form action="/vodsearch/-------------.html" method="get" name="search" onsubmit="return qrsearch();">
+        <div class="searchbar">
+         <input autocomplete="off" class="search-input" name="wd" placeholder="搜索电影、电视剧、综艺、动漫" type="text"/>
+         <button class="search-btn search-go" id="searchbutton" type="submit">
+          <i class="icon-search">
+          </i>
+         </button>
+         <button class="cancel-btn" type="button">
+          取消
+         </button>
+        </div>
+        <div class="search-recommend-box">
+         <div class="search-recommend">
+          <div class="search-recommend-title">
+           <strong>
+            大家都在搜
+           </strong>
+          </div>
+          <div class="search-tag">
+           <a class="hot" href="/vodsearch/%E5%8F%98%E5%BD%A2%E9%87%91%E5%88%9A-------------.html">
+            <i class="icon-hot">
+            </i>
+            变形金刚
+           </a>
+           <a class="hot" href="/vodsearch/%E7%81%AB%E5%BD%B1%E5%BF%8D%E8%80%85-------------.html">
+            <i class="icon-hot">
+            </i>
+            火影忍者
+           </a>
+           <a class="hot" href="/vodsearch/%E5%A4%8D%E4%BB%87%E8%80%85%E8%81%94%E7%9B%9F-------------.html">
+            <i class="icon-hot">
+            </i>
+            复仇者联盟
+           </a>
+           <a class="hot" href="/vodsearch/%E6%88%98%E7%8B%BC-------------.html">
+            <i class="icon-hot">
+            </i>
+            战狼
+           </a>
+           <a class="" href="/vodsearch/%E7%BA%A2%E6%B5%B7%E8%A1%8C%E5%8A%A8-------------.html">
+            <i class="icon-hot">
+            </i>
+            红海行动
+           </a>
+          </div>
+         </div>
+        </div>
+       </form>
+      </div>
+     </div>
+     <div class="header-op">
+      <div class="header-op-list">
+       <div class="drop">
+        <div class="header-op-list-btn header-op-history">
+         <i class="icon icon-history-o">
+         </i>
+         <span>
+          观看记录
+         </span>
+        </div>
+        <div class="drop-content drop-history">
+         <div class="drop-content-box">
+          <ul class="drop-content-items historical">
+           <li class="drop-item drop-item-title">
+            <i class="icon icon-history">
+            </i>
+            <strong>
+             我的观影记录
+            </strong>
+           </li>
+          </ul>
+         </div>
+        </div>
+        <div class="shortcuts-mobile-overlay">
+        </div>
+       </div>
+       <div class="mac_user header-op-user" title="会员中心">
+        登录
+       </div>
+       <div class="header-op-list-btn header-op-search">
+        <i class="icon icon-search">
+        </i>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div>
+   <div class="sidebar">
+    <div class="navbar">
+     <ul class="navbar-items swiper-wrapper">
+      <li class="swiper-slide navbar-item">
+       <a class="links" href="/">
+        <div>
+        </div>
+        <i class="icon-arrow-go">
+        </i>
+        <i class="icon icon-home-o">
+        </i>
+        <span>
+         首页
+        </span>
+       </a>
+      </li>
+      <li class="navbar-hr">
+      </li>
+      <li class="swiper-slide navbar-item">
+       <a class="links" href="/vodtype/20.html" title="电影">
+        <i class="icon-arrow-go">
+        </i>
+        <i class="">
+        </i>
+        <span>
+         电影
+        </span>
+       </a>
+      </li>
+      <li class="swiper-slide navbar-item">
+       <a class="links" href="/vodtype/37.html" title="连续剧">
+        <i class="icon-arrow-go">
+        </i>
+        <i class="">
+        </i>
+        <span>
+         连续剧
+        </span>
+       </a>
+      </li>
+      <li class="swiper-slide navbar-item">
+       <a class="links" href="/vodtype/43.html" title="动漫">
+        <i class="icon-arrow-go">
+        </i>
+        <i class="">
+        </i>
+        <span>
+         动漫
+        </span>
+       </a>
+      </li>
+      <li class="swiper-slide navbar-item">
+       <a class="links" href="/vodtype/45.html" title="综艺">
+        <i class="icon-arrow-go">
+        </i>
+        <i class="">
+        </i>
+        <span>
+         综艺
+        </span>
+       </a>
+      </li>
+      <li class="swiper-slide navbar-item">
+       <a class="links" href="/vodtype/47.html" title="B站">
+        <i class="icon-arrow-go">
+        </i>
+        <i class="">
+        </i>
+        <span>
+         B站
+        </span>
+       </a>
+      </li>
+      <li class="navbar-hr">
+      </li>
+      <li class="swiper-slide navbar-item">
+       <a class="links" href="/label/hot.html">
+        <i class="icon-arrow-go">
+        </i>
+        <i class="icon icon-ranking-o">
+        </i>
+        <span>
+         热度榜
+        </span>
+       </a>
+      </li>
+      <li class="swiper-slide navbar-item">
+       <a class="links" href="https://www.4kmovie.site/" target="_blank" title="发布页">
+        <i class="icon-arrow-go">
+        </i>
+        <i class="icon icon-diy">
+        </i>
+        <span>
+         发布页
+        </span>
+       </a>
+      </li>
+      <li class="swiper-slide navbar-item">
+       <a class="links" href="https://yinghezhinan.com/" target="_blank" title="硬核指南">
+        <i class="icon-arrow-go">
+        </i>
+        <i class="icon icon-diy">
+        </i>
+        <span>
+         硬核指南
+        </span>
+       </a>
+      </li>
+     </ul>
+    </div>
+    <div class="side-op">
+     <div class="header-op-list">
+      <div class="drop">
+       <div class="header-op-list-btn header-op-history">
+        <i class="icon icon-history-o">
+        </i>
+        <span>
+         观看记录
+        </span>
+       </div>
+       <div class="drop-content drop-history">
+        <div class="drop-content-box">
+         <ul class="drop-content-items historical">
+          <li class="drop-item drop-item-title">
+           <i class="icon icon-history">
+           </i>
+           <strong>
+            我的观影记录
+           </strong>
+          </li>
+         </ul>
+        </div>
+       </div>
+       <div class="shortcuts-mobile-overlay">
+       </div>
+      </div>
+      <div class="header-op-list-btn header-op-search">
+       <i class="icon icon-search">
+       </i>
+      </div>
+      <div class="member_group">
+       <div class="mac_user">
+        <img class="useimg" src="/static/images/touxiang.png"/>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div>
+   <script>
+    $(document).scroll(function() { var H = $(document).scrollTop(); if(H > 20) { $(".sidebar").addClass("sidebar-bg"); } else { $(".sidebar").removeClass("sidebar-bg"); } if(H > 140) { $(".navbar").addClass("open"); $(".side-op").addClass("open"); } else { $(".navbar").removeClass("open"); $(".side-op").removeClass("open"); } });
+   </script>
+   <style>
+    .homepage .side-op .header-op-search{display:none;}
+   </style>
+   <style>
+    @media (max-width: 559px){.homepage .header{0}.homepage .sidebar{0}}
+   </style>
+   <div class="main">
+    <div class="content">
+     <div class="module">
+      <div class="module-heading module-heading-search">
+       <div class="module-heading-search-result">
+        搜索"
+        <strong>
+         良陈美锦
+        </strong>
+        "，找到
+        <strong class="mac_total">
+        </strong>
+        部影片
+       </div>
+      </div>
+      <div class="module-main module-page">
+       <div class="module-items module-card-items">
+        <div class="module-card-item module-item">
+         <div class="module-card-item-class">
+          连续剧
+         </div>
+         <a class="module-card-item-poster" href="/voddetail/114.html">
+          <div class="module-item-cover">
+           <div class="module-item-note">
+            全剧集
+           </div>
+           <div class="module-item-pic">
+            <img alt="良陈美锦" class="lazy lazyload" data-original="https://1img.hitv.com/preview/sp_images/2026/04/28/20260428111924649.jpg" referrerpolicy="no-referrer" src="/mxtheme/images/load.gif"/>
+           </div>
+          </div>
+         </a>
+         <div class="module-card-item-info">
+          <div class="module-card-item-title">
+           <a href="/vodplay/114-1-1.html">
+            <strong>
+             良陈美锦
+            </strong>
+           </a>
+          </div>
+          <div class="module-info-item">
+           <div class="module-info-item-content">
+            2026
+            <span class="slash">
+             /
+            </span>
+            内地
+            <span class="slash">
+             /
+            </span>
+            古装,爱情,国产
+           </div>
+          </div>
+          <div class="module-info-item">
+           <div class="module-info-item-content">
+            任敏,此沙,董思成,黄羿
+           </div>
+          </div>
+         </div>
+         <div class="module-card-item-footer">
+          <a class="play-btn icon-btn" href="/vodplay/114-1-1.html">
+           <i class="icon-play">
+           </i>
+           <span>
+            播放
+           </span>
+          </a>
+          <a class="play-btn-o" href="/voddetail/114.html">
+           <span>
+            详情
+           </span>
+          </a>
+         </div>
+        </div>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div>
+  </div>
+  <div class="fixedGroup">
+   <div class="fixedGroup-item">
+    <div class="fixedGroup__cell">
+     <span class="fixedGroup__triangle">
+     </span>
+     <div class="txt" id="changeAppearance">
+      切换深色外观
+     </div>
+    </div>
+    <i class="icon-yejian" data-id="black">
+    </i>
+    <i class="icon-rijian" data-id="white">
+    </i>
+   </div>
+   <div class="fixedGroup-item" onclick="location='/gbook.html'">
+    <div class="fixedGroup__cell">
+     <span class="fixedGroup__triangle">
+     </span>
+     <div>
+      留言
+     </div>
+    </div>
+    <i class="icon-gbook">
+    </i>
+   </div>
+   <div class="fixedGroup-item retop">
+    <div class="fixedGroup__cell">
+     <span class="fixedGroup__triangle">
+     </span>
+     <div>
+      回到顶部
+     </div>
+    </div>
+    <i class="icon-top">
+    </i>
+   </div>
+  </div>
+  <div class="footer">
+   <div class="content">
+    <div class="footer-content">
+     <div class="foot-logo">
+      <img alt="追光影视-海量最新优质国内影视剧资源的网站" class="logo2" src="/upload/mxprocms/20260515-1/e85ff62cf8cd9f2d2778f6f679c7f6ba.png"/>
+      <img class="logo1" src="/upload/mxprocms/20260515-1/78ad29e0348287d939c550a83db1834f.png"/>
+     </div>
+     <div class="foot-copyright">
+      <a href="/rss/index.xml" target="_blank">
+       RSS
+      </a>
+      <a href="/rss/baidu.xml" target="_blank">
+       Baidu
+      </a>
+      <a href="/rss/baidu.xml" target="_blank">
+       Google
+      </a>
+      <a href="/rss/sogou.xml" target="_blank">
+       Sogou
+      </a>
+      <a href="" rel="”nofollow”" target="_blank">
+       底部反馈
+      </a>
+      <a href="" rel="”nofollow”" target="_blank">
+       QQ交流群
+      </a>
+      <a href="" rel="”nofollow”" target="_blank">
+       Telegram群
+      </a>
+      <p>
+       追光影视-海量最新优质国内影视剧资源的网站 本站所有内容均来自互联网分享站点所提供的公开引用资源，未提供资源上传、存储服务
+       <span class="none">
+        <script data-website-id="0b209f21-8983-4ffa-8d4f-4e420b5ff9eb" defer="" src="https://tj.qhdh.top/script.js">
+        </script>
+       </span>
+      </p>
+     </div>
+    </div>
+   </div>
+  </div>
+  <script type="text/javascript">
+   document.onkeydown=function(){ var e = window.event||arguments[0]; }
+  </script>
+  <script src="/template/mxpro/js/notice.js">
+  </script>
+  <script>
+   $('.mac_total').html('1');
+  </script>
+ </body>
+</html>
