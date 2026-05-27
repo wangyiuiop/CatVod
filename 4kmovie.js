@@ -268,55 +268,94 @@ async function search(wd, quick, pg) {
         let videos = [];
         let seenIds = new Set();
 
-        const items = $('.module-items .module-item');
+        const items = $('.module-items .module-item, .module-card-item, .module-poster-item');
 
         items.each((_, item) => {
             const $item = $(item);
             
-            // 查找 vodplay 链接获取标题和ID
-            const playLink = $item.find('a[href*="/vodplay/"]').first();
-            // 查找 voddetail 链接获取ID
-            const detailLink = $item.find('a[href*="/voddetail/"]').first();
-            
-            let href = '';
+            // 提取 vodId：优先从 vodplay，其次从 voddetail
             let vodId = '';
-            
-            // 优先从 vodplay 链接提取ID
-            if (playLink && playLink.length > 0) {
-                href = playLink.attr('href');
+            const allLinks = $item.find('a');
+            allLinks.each((_, linkEl) => {
+                if (vodId) return;
+                const href = $(linkEl).attr('href') || '';
                 const playMatch = href.match(/\/vodplay\/(\d+)/);
-                if (playMatch) {
-                    vodId = playMatch[1];
-                }
-            }
-            
-            // 如果 vodplay 没有ID，尝试从 voddetail 获取
-            if (!vodId && detailLink && detailLink.length > 0) {
-                href = detailLink.attr('href');
                 const detailMatch = href.match(/\/voddetail\/(\d+)/);
-                if (detailMatch) {
-                    vodId = detailMatch[1];
-                }
-            }
+                if (playMatch) vodId = playMatch[1];
+                else if (detailMatch) vodId = detailMatch[1];
+            });
             
             if (!vodId) return;
-            
-            // 去重
             if (seenIds.has(vodId)) return;
             seenIds.add(vodId);
             
-            // 标题：优先从链接的 title 属性获取，其次从文本获取
-            let title = playLink ? (playLink.attr('title') || playLink.text().trim()) : '';
+            // 尝试多种方式提取标题
+            let title = '';
+            // 方法1：查找包含 vodplay 的链接
+            const playLink = $item.find('a[href*="/vodplay/"]').first();
+            if (playLink && playLink.length > 0) {
+                title = playLink.attr('title') || playLink.text().trim();
+            }
+            // 方法2：查找包含 strong 或 b 标签的元素
+            if (!title) {
+                const strong = $item.find('strong, b').first();
+                if (strong && strong.length > 0) {
+                    title = strong.text().trim();
+                }
+            }
+            // 方法3：查找任何标题类元素
+            if (!title) {
+                const titleEl = $item.find('[class*="title"], h1, h2, h3, h4, h5, h6').first();
+                if (titleEl && titleEl.length > 0) {
+                    title = titleEl.text().trim();
+                }
+            }
+            // 方法4：查找 img 的 alt 属性
+            if (!title) {
+                const img = $item.find('img').first();
+                if (img && img.length > 0) {
+                    title = img.attr('alt') || '';
+                }
+            }
+            // 方法5：直接取第一个链接的文本
+            if (!title) {
+                const firstLink = $item.find('a').first();
+                if (firstLink && firstLink.length > 0) {
+                    title = firstLink.text().trim();
+                }
+            }
             
-            // 清理标题中的多余空格和特殊字符
+            // 清理标题
             title = title.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
             
-            // 图片：从模块中的 img 标签获取
+            // 提取图片
+            let pic = '';
             const img = $item.find('img').first();
-            let pic = img.attr('data-original') || img.attr('src') || '';
+            if (img && img.length > 0) {
+                pic = img.attr('data-original') || img.attr('data-src') || img.attr('src') || '';
+            }
             
-            // 备注：包含集数、清晰度等信息
-            let remarks = $item.find('.module-item-note').text().trim();
+            // 提取备注：尝试多种方式
+            let remarks = '';
+            // 方法1：查找 module-item-note
+            remarks = $item.find('.module-item-note').text().trim();
+            // 方法2：查找第一个包含年份或集数的链接
+            if (!remarks) {
+                const noteLinks = $item.find('a').filter((_, el) => {
+                    const text = $(el).text().trim();
+                    return text.includes('集') || text.includes('HD') || text.match(/^\d+$/);
+                }).first();
+                if (noteLinks && noteLinks.length > 0) {
+                    remarks = noteLinks.text().trim();
+                }
+            }
+            // 方法3：查找任何备注类元素
+            if (!remarks) {
+                const noteEl = $item.find('[class*="note"], [class*="serial"], [class*="remark"]').first();
+                if (noteEl && noteEl.length > 0) {
+                    remarks = noteEl.text().trim();
+                }
+            }
             
             videos.push({
                 vod_id: vodId,
