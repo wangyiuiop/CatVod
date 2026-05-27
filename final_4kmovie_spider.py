@@ -79,55 +79,62 @@ class Spider(Spider):
 
     def categoryContent(self, tid, pg, filter, extend):
         pg = pg or "1"
-        id_str = extend.get('class', tid)
-        area = extend.get('area', '')
-        by = extend.get('by', '')
-        cls = extend.get('class', '')
-        lang = extend.get('lang', '')
-        letter = extend.get('letter', '')
-        year = extend.get('year', '')
-
-        link = f"{self.url}/vodshow/{id_str}-{area}-{by}-{cls}-{lang}-{letter}---{pg}---{year}.html"
-        res = requests.get(link, headers=self.headers, timeout=10)
-        soup = BeautifulSoup(res.text, 'html.parser')
-
-        videos = []
-        for a in soup.select('.module-items a.module-poster-item'):
-            href = a.get('href', '')
-            if not href:
-                continue
-
-            vod_id_match = re.search(r'/vod(?:play|detail)/(\d+)', href)
-            vod_id = vod_id_match.group(1) if vod_id_match else ''
-            
-            title_elem = a.select_one('.module-poster-item-title')
-            title = a.get('title') or (title_elem.text.strip() if title_elem else '')
-            
-            img_elem = a.select_one('.module-item-pic img')
-            pic = ''
-            if img_elem:
-                pic = img_elem.get('data-original') or img_elem.get('src', '')
-
-            note_elem = a.select_one('.module-item-note')
-            remarks = note_elem.text.strip() if note_elem else ''
-
-            videos.append({
-                'vod_id': vod_id,
-                'vod_name': title,
-                'vod_pic': pic,
-                'vod_remarks': remarks
-            })
-
-        has_more = len(soup.select('.page-next')) > 0
         pg_int = int(pg)
         
-        return {
-            'page': pg_int,
-            'pagecount': pg_int + 1 if has_more else pg_int,
-            'limit': len(videos),
-            'total': len(videos) * (pg_int + 1 if has_more else pg_int),
-            'list': videos
-        }
+        # 修复的URL格式：使用 /vodtype/{tid}-{pg}.html
+        if pg_int > 1:
+            link = f"{self.url}/vodtype/{tid}-{pg}.html"
+        else:
+            link = f"{self.url}/vodtype/{tid}.html"
+        
+        try:
+            res = requests.get(link, headers=self.headers, timeout=10)
+            soup = BeautifulSoup(res.text, 'html.parser')
+            
+            videos = []
+            for a in soup.select('.module-poster-item'):
+                href = a.get('href', '')
+                if not href:
+                    continue
+
+                vod_id_match = re.search(r'/vod(?:play|detail)/(\d+)', href)
+                vod_id = vod_id_match.group(1) if vod_id_match else ''
+                
+                title_elem = a.select_one('.module-poster-item-title')
+                title = a.get('title') or (title_elem.text.strip() if title_elem else '')
+                
+                img_elem = a.select_one('.module-item-pic img')
+                pic = ''
+                if img_elem:
+                    pic = img_elem.get('data-original') or img_elem.get('src', '')
+
+                note_elem = a.select_one('.module-item-note')
+                remarks = note_elem.text.strip() if note_elem else ''
+
+                videos.append({
+                    'vod_id': vod_id,
+                    'vod_name': title,
+                    'vod_pic': pic,
+                    'vod_remarks': remarks
+                })
+
+            has_more = len(soup.select('.page-next')) > 0 or len(soup.select('.next')) > 0
+            
+            return {
+                'page': pg_int,
+                'pagecount': pg_int + 1 if has_more else pg_int,
+                'limit': len(videos),
+                'total': len(videos) * (pg_int + 1 if has_more else pg_int),
+                'list': videos
+            }
+        except Exception as e:
+            return {
+                'page': pg_int,
+                'pagecount': pg_int,
+                'limit': 0,
+                'total': 0,
+                'list': []
+            }
 
     def detailContent(self, array):
         vod_id = array[0]
