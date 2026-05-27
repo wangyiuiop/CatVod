@@ -266,37 +266,58 @@ async function search(wd, quick, pg) {
         const $ = load(html);
         
         let videos = [];
+        let seenIds = new Set();
 
         const items = $('.module-items .module-item');
 
         items.each((_, item) => {
             const $item = $(item);
             
+            // 查找 vodplay 链接获取标题和ID
+            const playLink = $item.find('a[href*="/vodplay/"]').first();
+            // 查找 voddetail 链接获取ID
             const detailLink = $item.find('a[href*="/voddetail/"]').first();
             
-            if (!detailLink || detailLink.length === 0) return;
-
-            const href = detailLink.attr('href');
-            const vodIdMatch = href.match(/\/voddetail\/(\d+)/);
+            let href = '';
+            let vodId = '';
             
-            if (!vodIdMatch) return;
+            // 优先从 vodplay 链接提取ID
+            if (playLink && playLink.length > 0) {
+                href = playLink.attr('href');
+                const playMatch = href.match(/\/vodplay\/(\d+)/);
+                if (playMatch) {
+                    vodId = playMatch[1];
+                }
+            }
             
-            const vodId = vodIdMatch[1];
-
-            let title = detailLink.attr('title') || 
-                        detailLink.find('span').text().trim() ||
-                        detailLink.text().replace(/\s+/g, '').trim() || '';
+            // 如果 vodplay 没有ID，尝试从 voddetail 获取
+            if (!vodId && detailLink && detailLink.length > 0) {
+                href = detailLink.attr('href');
+                const detailMatch = href.match(/\/voddetail\/(\d+)/);
+                if (detailMatch) {
+                    vodId = detailMatch[1];
+                }
+            }
             
+            if (!vodId) return;
+            
+            // 去重
+            if (seenIds.has(vodId)) return;
+            seenIds.add(vodId);
+            
+            // 标题：优先从链接的 title 属性获取，其次从文本获取
+            let title = playLink ? (playLink.attr('title') || playLink.text().trim()) : '';
+            
+            // 清理标题中的多余空格和特殊字符
+            title = title.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+            
+            // 图片：从模块中的 img 标签获取
             const img = $item.find('img').first();
             let pic = img.attr('data-original') || img.attr('src') || '';
             
-            let remarks = $item.find('.module-item-note').text().trim() ||
-                          $item.clone().children().remove().end().text().trim();
-
-            title = title.replace(/<[^>]+>/g, "").replace(/\s+/g, ' ').trim();
+            // 备注：包含集数、清晰度等信息
+            let remarks = $item.find('.module-item-note').text().trim();
             
-            if (videos.find(v => v.vod_id === vodId)) return;
-
             videos.push({
                 vod_id: vodId,
                 vod_name: title,
