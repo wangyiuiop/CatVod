@@ -13,7 +13,7 @@ class Spider(Spider):
     def destroy(self): pass
     
     def __init__(self):
-        self.url = 'https://www.fsdm02.com'
+        self.url = 'https://dm.fsdm02.com'
         self.user_agents = [
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
@@ -203,7 +203,7 @@ class Spider(Spider):
             return {'list': []}
 
     def _is_captcha_page(self, html):
-        keywords = ['身份验证', '验证码', 'captcha', '验证失败', '请输入验证码', '安全验证', '人机验证', '不要频繁操作', 'Security Verification', 'Slide to complete']
+        keywords = ['身份验证', '验证码', 'captcha', '验证失败', '请输入验证码', '安全验证', '人机验证', '不要频繁操作', 'Security Verification', 'Slide to complete', 'DokiDoki']
         html_lower = html.lower()
         return any(keyword in html_lower for keyword in keywords)
 
