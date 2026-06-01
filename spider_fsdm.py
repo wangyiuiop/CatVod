@@ -14,11 +14,30 @@ class Spider(Spider):
     
     def __init__(self):
         self.url = 'https://www.fsdm02.com'
+        self.user_agents = [
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:126.0) Gecko/20100101 Firefox/126.0',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4.1 Safari/605.1.15'
+        ]
+        self._update_headers()
+    
+    def _update_headers(self):
         self.header = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'User-Agent': random.choice(self.user_agents),
             'Referer': self.url,
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-            'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8'
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+            'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'DNT': '1',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
+            'Sec-Fetch-Dest': 'document',
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-Site': 'none',
+            'Sec-Fetch-User': '?1',
+            'Cache-Control': 'max-age=0'
         }
     
     def homeContent(self, filter):
@@ -33,6 +52,8 @@ class Spider(Spider):
 
     def homeVideoContent(self):
         try:
+            time.sleep(random.uniform(0.5, 1.5))
+            self._update_headers()
             response = self.fetch(self.url, headers=self.header)
             return {'list': self._p(response.text)}
         except Exception as e:
@@ -41,6 +62,9 @@ class Spider(Spider):
 
     def categoryContent(self, tid, pg, filter, extend):
         try:
+            time.sleep(random.uniform(0.3, 1.0))
+            self._update_headers()
+            
             if int(pg) > 1:
                 u = f'{self.url}/vodtype/{tid}-{pg}.html'
             else:
@@ -83,13 +107,15 @@ class Spider(Spider):
 
     def detailContent(self, ids):
         try:
+            time.sleep(random.uniform(0.3, 1.0))
+            self._update_headers()
             h = self.fetch(f'{self.url}/voddetail/{ids[0]}.html', headers=self.header).text
             v = {'vod_id': ids[0], 'vod_name': '', 'vod_pic': '', 'vod_type': '', 'vod_year': '', 'vod_area': '', 'vod_remarks': '', 'vod_actor': '', 'vod_director': '', 'vod_content': ''}
             
             m1 = re.search(r'<h1[^>]*>([^<]+)</h1>', h)
             if m1: v['vod_name'] = m1.group(1).strip()
             
-            m2 = re.search(r'<img[^>]*class="[^"]*lazyload[^"]*"[^>]*data-src="([^"]+)"', h) or re.search(r'<img[^>]*src="([^"]+)"[^>]*class="[^"]*lazyload', h)
+            m2 = re.search(r'<img[^>]*class="[^"]*lazyload[^"]*"[^>]*data-src="([^"]+)"', h) or re.search(r'<img[^>]*src="([^"]+)"[^>]*class="[^"]*lazyload', h) or re.search(r'<div[^>]*class="[^"]*video-cover[^"]*"[^>]*>.*?<img[^>]*src="([^"]+)"', h, re.S)
             if m2: v['vod_pic'] = m2.group(1)
             
             m3 = re.search(r'<div[^>]*class="[^"]*desc[^"]*"[^>]*>(.*?)</div>', h, re.S) or re.search(r'<div[^>]*class="[^"]*content[^"]*"[^>]*>(.*?)</div>', h, re.S)
@@ -104,6 +130,9 @@ class Spider(Spider):
             
             actor_match = re.search(r'主演</span>[:：]\s*(.*?)</li>', info_text, re.S)
             if actor_match: v['vod_actor'] = re.sub(r'<[^>]+>', '', actor_match.group(1)).strip()
+            
+            remarks_match = re.search(r'<span[^>]*class="[^"]*remarks[^"]*"[^>]*>([^<]+)</span>', h) or re.search(r'<span[^>]*class="[^"]*score[^"]*"[^>]*>([^<]+)</span>', h)
+            if remarks_match: v['vod_remarks'] = remarks_match.group(1).strip()
             
             play_list_match = re.search(r'<ul[^>]*class="[^"]*scroll-content[^"]*"[^>]*>(.*?)</ul>', h, re.S)
             us = []
@@ -122,7 +151,8 @@ class Spider(Spider):
 
     def searchContent(self, key, quick, pg="1"):
         try:
-            time.sleep(random.uniform(0.3, 0.8))
+            time.sleep(random.uniform(0.5, 1.5))
+            self._update_headers()
             encoded_key = urllib.parse.quote(key)
             
             url1 = f'{self.url}/vodsearch/{encoded_key}----------{pg}---.html'
@@ -151,6 +181,8 @@ class Spider(Spider):
             ajax_headers = self.header.copy()
             ajax_headers['X-Requested-With'] = 'XMLHttpRequest'
             ajax_headers['Accept'] = 'application/json, text/javascript, */*; q=0.01'
+            ajax_headers['Sec-Fetch-Dest'] = 'empty'
+            ajax_headers['Sec-Fetch-Mode'] = 'cors'
             
             res_text = self.fetch(ajax_url, headers=ajax_headers).text
             if self._is_captcha_page(res_text):
@@ -171,22 +203,26 @@ class Spider(Spider):
             return {'list': []}
 
     def _is_captcha_page(self, html):
-        keywords = ['身份验证', '验证码', 'captcha', '验证失败', '请输入验证码', '安全验证', '人机验证', '不要频繁操作', 'Security Verification']
+        keywords = ['身份验证', '验证码', 'captcha', '验证失败', '请输入验证码', '安全验证', '人机验证', '不要频繁操作', 'Security Verification', 'Slide to complete']
         html_lower = html.lower()
         return any(keyword in html_lower for keyword in keywords)
 
     def playerContent(self, flag, id, vipFlags):
         try:
+            time.sleep(random.uniform(0.3, 0.8))
+            self._update_headers()
             play_url = id if id.startswith('http') else (f"{self.url}{id}" if id.startswith('/') else f"{self.url}/{id}")
             
             result = {
                 'parse': 1,
                 'url': play_url,
                 'header': {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'User-Agent': random.choice(self.user_agents),
                     'Referer': self.url,
                     'Accept': '*/*',
                     'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+                    'Accept-Encoding': 'gzip, deflate, br',
+                    'Connection': 'keep-alive'
                 }
             }
             
