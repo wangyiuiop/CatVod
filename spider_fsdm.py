@@ -6,7 +6,7 @@ import urllib.parse
 from base.spider import Spider
 
 class Spider(Spider):
-    def getName(self): return "飞速动漫"
+    def getName(self): return "番薯动漫"
     def init(self, extend=""): pass
     def isVideoFormat(self, url): pass
     def manualVideoCheck(self): pass
@@ -23,12 +23,11 @@ class Spider(Spider):
     
     def homeContent(self, filter):
         classes = [
-            ('日本动漫', '1'),
+            ('TV番剧', '1'),
             ('国产动漫', '2'),
-            ('欧美动漫', '3'),
-            ('日本动画电影', '4'),
-            ('国产动画电影', '5'),
-            ('欧美动画电影', '6')
+            ('剧场版', '3'),
+            ('4k分区', '4'),
+            ('欧美动漫', '5')
         ]
         return {'class': [{'type_name': n, 'type_id': i} for n, i in classes]}
 
@@ -36,24 +35,16 @@ class Spider(Spider):
         try:
             response = self.fetch(self.url, headers=self.header)
             return {'list': self._p(response.text)}
-        except: return {'list': []}
+        except Exception as e:
+            print(f"[错误] homeVideoContent: {str(e)}")
+            return {'list': []}
 
     def categoryContent(self, tid, pg, filter, extend):
         try:
-            base_url = f'{self.url}/vod/show'
-            
-            order_by = extend.get('by', '')
-            year = extend.get('year', '')
-            
-            if order_by:
-                u = f'{base_url}/by/{order_by}/id/{tid}'
+            if int(pg) > 1:
+                u = f'{self.url}/vodtype/{tid}-{pg}.html'
             else:
-                u = f'{base_url}/id/{tid}'
-            
-            if year:
-                u = f'{u}/year/{year}'
-            
-            u = f'{u}/page/{pg}.html'
+                u = f'{self.url}/vodtype/{tid}.html'
             
             response = self.fetch(u, headers=self.header)
             html = response.text
@@ -74,51 +65,55 @@ class Spider(Spider):
     def _extract_page_info(self, html):
         result = {'pagecount': 1, 'total': 0}
         
-        total_match = re.search(r'(\d+)\s*部影片', html)
+        total_match = re.search(r'共\s*(\d+)\s*部', html)
         if total_match:
             result['total'] = int(total_match.group(1))
         
-        last_page_match = re.search(r'最后\s*».*?/page/(\d+)\.html', html)
+        last_page_match = re.search(r'<a[^>]*href="[^"]*/vodtype/[^"]*-(\d+)\.html"[^>]*>末页</a>', html)
         if last_page_match:
             result['pagecount'] = int(last_page_match.group(1))
         else:
-            page_matches = re.findall(r'/page/(\d+)\.html', html)
+            page_matches = re.findall(r'/vodtype/[^"]*-(\d+)\.html', html)
             if page_matches:
-                result['pagecount'] = max(int(p) for p in page_matches)
+                page_numbers = [int(p) for p in page_matches if p.isdigit()]
+                if page_numbers:
+                    result['pagecount'] = max(page_numbers)
         
         return result
 
     def detailContent(self, ids):
         try:
-            h = self.fetch(f'{self.url}/detail/{ids[0]}.html', headers=self.header).text
+            h = self.fetch(f'{self.url}/voddetail/{ids[0]}.html', headers=self.header).text
             v = {'vod_id': ids[0], 'vod_name': '', 'vod_pic': '', 'vod_type': '', 'vod_year': '', 'vod_area': '', 'vod_remarks': '', 'vod_actor': '', 'vod_director': '', 'vod_content': ''}
             
-            m1 = re.search(r'<h1[^>]*class="[^"]*page-title[^"]*"[^>]*>(.*?)</h1>', h) or re.search(r'<h1[^>]*>(.*?)</h1>', h)
-            if m1: v['vod_name'] = m1.group(1)
+            m1 = re.search(r'<h1[^>]*>([^<]+)</h1>', h)
+            if m1: v['vod_name'] = m1.group(1).strip()
             
-            m2 = re.search(r'class="[^"]*module-item-pic[^"]*".*?<img[^>]*src="([^"]+)"', h, re.S) or re.search(r'<div[^>]*class="[^"]*video-cover[^"]*".*?<img[^>]*src="([^"]+)"', h, re.S)
+            m2 = re.search(r'<img[^>]*class="[^"]*lazyload[^"]*"[^>]*data-src="([^"]+)"', h) or re.search(r'<img[^>]*src="([^"]+)"[^>]*class="[^"]*lazyload', h)
             if m2: v['vod_pic'] = m2.group(1)
             
-            m3 = re.search(r'<div[^>]*class="[^"]*video-info-content[^"]*">(.*?)</div>', h, re.S) or re.search(r'<div[^>]*class="[^"]*content[^"]*">(.*?)</div>', h, re.S)
+            m3 = re.search(r'<div[^>]*class="[^"]*desc[^"]*"[^>]*>(.*?)</div>', h, re.S) or re.search(r'<div[^>]*class="[^"]*content[^"]*"[^>]*>(.*?)</div>', h, re.S)
             if m3: v['vod_content'] = re.sub(r'<[^>]+>', '', m3.group(1)).strip()
             
-            tags = re.findall(r'<a[^>]*class="[^"]*tag-link[^"]*"[^>]*>(.*?)</a>', h)
-            if tags: v['vod_actor'] = ','.join(tags[:5])
+            info_text = h
+            year_match = re.search(r'年份</span>[:：]\s*<a[^>]*>([^<]+)</a>', info_text) or re.search(r'(\d{4})', info_text[:500])
+            if year_match: v['vod_year'] = year_match.group(1).strip()
             
-            areas = re.findall(r'<a[^>]*href="[^"]*area/[^"]*"[^>]*>(.*?)</a>', h)
-            if areas: v['vod_area'] = areas[0]
+            area_match = re.search(r'地区</span>[:：]\s*<a[^>]*>([^<]+)</a>', info_text)
+            if area_match: v['vod_area'] = area_match.group(1).strip()
             
-            years = re.findall(r'<a[^>]*href="[^"]*year/[^"]*"[^>]*>(.*?)</a>', h)
-            if years: v['vod_year'] = years[0]
+            actor_match = re.search(r'主演</span>[:：]\s*(.*?)</li>', info_text, re.S)
+            if actor_match: v['vod_actor'] = re.sub(r'<[^>]+>', '', actor_match.group(1)).strip()
             
-            ts = list(dict.fromkeys(re.findall(r'data-dropdown-value="([^"]+)"', h)))
+            play_list_match = re.search(r'<ul[^>]*class="[^"]*scroll-content[^"]*"[^>]*>(.*?)</ul>', h, re.S)
             us = []
-            for b in h.split('class="module-list')[1:]:
-                if 'module-blocklist' not in b: continue
-                es = [f"{n}${self.url}{u}" for u, n in re.findall(r'<a[^>]*href="(/play/.*?.html)"[^>]*>.*?<span[^>]*>(.*?)</span>', b, re.S)]
-                if es: us.append("#".join(es))
+            if play_list_match:
+                episodes = re.findall(r'<a[^>]*href="/vodplay/([^"]+)"[^>]*>([^<]+)</a>', play_list_match.group(1))
+                if episodes:
+                    es = [f"{n}${self.url}/vodplay/{u}" for u, n in episodes]
+                    us.append("#".join(es))
             
-            v['vod_play_from'] = "$$$".join(ts if len(ts) == len(us) else [f"线路{i+1}" for i in range(len(us))])
+            v['vod_play_from'] = "$$$".join([f"线路{i+1}" for i in range(len(us))])
             v['vod_play_url'] = "$$$".join(us)
             return {'list': [v]}
         except Exception as e:
@@ -130,7 +125,7 @@ class Spider(Spider):
             time.sleep(random.uniform(0.3, 0.8))
             encoded_key = urllib.parse.quote(key)
             
-            url1 = f'{self.url}/vod/search/page/{pg}/wd/{encoded_key}.html'
+            url1 = f'{self.url}/vodsearch/{encoded_key}----------{pg}---.html'
             res1 = self.fetch(url1, headers=self.header).text
             if not self._is_captcha_page(res1):
                 results = self._p(res1)
@@ -141,13 +136,6 @@ class Spider(Spider):
             res2 = self.fetch(url2, headers=self.header).text
             if not self._is_captcha_page(res2):
                 results = self._p(res2)
-                if results: return {'list': results}
-
-            print("[提示] 方案 2 触发验证或无结果，切入方案 3 (长划线路由)...")
-            url3 = f'{self.url}/vodsearch/{encoded_key}----------{pg}---.html'
-            res3 = self.fetch(url3, headers=self.header).text
-            if not self._is_captcha_page(res3):
-                results = self._p(res3)
                 if results: return {'list': results}
 
             print("[警告] 网页搜索全部被拦截，启用最终 Ajax 联想接口越轨抓取...")
@@ -189,7 +177,7 @@ class Spider(Spider):
 
     def playerContent(self, flag, id, vipFlags):
         try:
-            play_url = f"{self.url}{id}" if id.startswith('/') else id
+            play_url = id if id.startswith('http') else (f"{self.url}{id}" if id.startswith('/') else f"{self.url}/{id}")
             
             result = {
                 'parse': 1,
@@ -216,23 +204,26 @@ class Spider(Spider):
 
     def _p(self, html):
         l = []
-        for match in re.finditer(r'<div[^>]*class="[^"]*video-img-box[^"]*"[^>]*>(.*?)<h6[^>]*class="[^"]*title[^"]*"[^>]*>(.*?)</h6>', html, re.S):
-            c, t = match.groups()
+        for match in re.finditer(r'<div[^>]*class="[^"]*module-card-poster[^"]*"[^>]*>(.*?)</div>', html, re.S):
             try:
-                vid = re.search(r'href="/detail/(\d+)\.html"', c)
-                if not vid:
-                    vid = re.search(r'href="/play/(\d+)\.html"', c)
-                if not vid:
+                c = match.group(1)
+                vid_match = re.search(r'href="/voddetail/([^"]+)\.html"', c)
+                if not vid_match:
                     continue
-                    
+                
+                vid = vid_match.group(1)
+                
                 img = re.search(r'data-src="([^"]+)"', c) or re.search(r'src="([^"]+)"', c)
-                rem = re.search(r'class="[^"]*label[^"]*">([^<]*)</span>', c)
-                tit = re.search(r'<a[^>]*>(.*?)</a>', t)
+                
+                rem_match = re.search(r'<span[^>]*class="[^"]*score[^"]*"[^>]*>([^<]+)</span>', c) or re.search(r'<span[^>]*class="[^"]*remark[^"]*"[^>]*>([^<]+)</span>', c)
+                
+                tit = re.search(r'<a[^>]*href="/voddetail/[^"]+\.html"[^>]*>([^<]+)</a>', c)
+                
                 l.append({
-                    'vod_id': vid.group(1),
-                    'vod_name': tit.group(1) if tit else '',
+                    'vod_id': vid,
+                    'vod_name': tit.group(1).strip() if tit else '',
                     'vod_pic': img.group(1) if img else '',
-                    'vod_remarks': rem.group(1) if rem else ''
+                    'vod_remarks': rem_match.group(1).strip() if rem_match else ''
                 })
             except Exception as e:
                 print(f"[错误] _p: {str(e)}")
