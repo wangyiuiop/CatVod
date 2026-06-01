@@ -11,11 +11,12 @@ class XBiubiu(Spider):
     """通用配置驱动爬虫"""
 
     def home_content(self, filter: bool = False) -> str:
-        """首页内容 - 返回分类列表"""
+        """首页内容 - 返回分类列表和筛选配置"""
         try:
             self.fetch_rule()
             result = {}
             classes = []
+            filter_dict = {}
 
             fenlei_str = self.get_rule_val("fenlei", "")
             if fenlei_str:
@@ -23,19 +24,60 @@ class XBiubiu(Spider):
                 for fenlei in fenleis:
                     info = fenlei.split("$")
                     if len(info) >= 2:
+                        type_id = info[1]
+                        type_name = info[0]
+                        
+                        # 基础分类
                         classes.append({
-                            "type_name": info[0],
-                            "type_id": info[1]
+                            "type_name": type_name,
+                            "type_id": type_id
                         })
+                        
+                        # 如果有扩展分类配置（包含筛选信息）
+                        if len(info) >= 3:
+                            extra = info[2]  # 例如: 动画,喜剧,爱情
+                            if extra and extra != "---":
+                                # 构建筛选器
+                                type_ids = type_id.replace("/", "_").replace("-", "_")
+                                classes_list = extra.split(",") if extra else []
+                                if classes_list:
+                                    filter_items = [{"key": "class", "name": "类型", "value": [{"n": "全部", "v": ""}]}]
+                                    for c in classes_list:
+                                        if c:
+                                            filter_items[0]["value"].append({"n": c.strip(), "v": c.strip()})
+                                    
+                                    # 添加排序选项
+                                    filter_items.append({
+                                        "key": "by", 
+                                        "name": "排序", 
+                                        "value": [
+                                            {"n": "按最新", "v": "time"},
+                                            {"n": "按最热", "v": "hits"},
+                                            {"n": "按评分", "v": "score"}
+                                        ]
+                                    })
+                                    
+                                    # 添加年份选项
+                                    years = [{"key": "year", "name": "年份", "value": [{"n": "全部", "v": ""}]}]
+                                    for y in range(2026, 2003, -1):
+                                        years[0]["value"].append({"n": str(y), "v": str(y)})
+                                    filter_items.extend(years)
+                                    
+                                    filter_dict[type_id] = filter_items
 
             result["class"] = classes
+            
+            # 添加筛选配置
+            if filter and filter_dict:
+                result["filters"] = filter_dict
+
             return json.dumps(result, ensure_ascii=False)
         except Exception as e:
             print(f"Home content error: {e}")
             return ""
 
     def home_video_content(self) -> str:
-        """首页推荐视频 - 从第一个分类获取推荐"""
+        """首页推荐视频"""
         try:
             self.fetch_rule()
             if self.get_rule_val("shouye") == "1":
@@ -46,7 +88,9 @@ class XBiubiu(Spider):
                     for fenlei in fenleis:
                         info = fenlei.split("$")
                         if len(info) >= 2:
-                            data = self._category(info[1], "1", False, {})
+                            # 跳过带筛选的分类（只取基础路径）
+                            tid = info[1]
+                            data = self._category(tid, "1", False, {})
                             if data and "list" in data:
                                 vids = data["list"]
                                 for i, vid in enumerate(vids):
@@ -63,11 +107,55 @@ class XBiubiu(Spider):
             print(f"Home video content error: {e}")
         return ""
 
+    def _build_category_url(self, tid: str, pg: str, extend: Optional[Dict] = None) -> str:
+        """构建分类URL，支持筛选参数"""
+        self.fetch_rule()
+        base_url = self.get_rule_val("url")
+        houzhui = self.get_rule_val("houzhui")
+        
+        # 解析 tid - 格式可能是: /vodshow/1-------- 或 /vodshow/1---喜剧-----
+        # 支持的筛选参数: area(地区), by(排序), class(类型), lang(语言), letter, year
+        
+        # 检查是否有筛选参数
+        has_filter = extend and any(extend.get(k) for k in ['area', 'by', 'class', 'lang', 'letter', 'year'] if extend.get(k))
+        
+        if has_filter and len(tid.split('---')) > 1:
+            # 替换 tid 中的空参数
+            parts = tid.split('---')
+            # parts: [type_id, area, by, class, lang, letter, page, year]
+            while len(parts) < 8:
+                parts.append('')
+            
+            # 更新筛选参数
+            if extend.get('area'):
+                parts[1] = extend['area']
+            if extend.get('by'):
+                parts[2] = extend['by']
+            if extend.get('class'):
+                parts[3] = extend['class']
+            if extend.get('lang'):
+                parts[4] = extend['lang']
+            if extend.get('letter'):
+                parts[5] = extend['letter']
+            if extend.get('year'):
+                parts[7] = extend['year']
+            
+            # 更新页码
+            parts[6] = pg
+            
+            # 重新组装 tid
+            tid = '---'.join(parts)
+        
+        return base_url + tid + houzhui
+
     def _category(self, tid: str, pg: str, filter: bool = False, extend: Optional[Dict] = None) -> Optional[Dict]:
         """内部分类获取方法"""
         try:
             self.fetch_rule()
-            web_url = self.get_rule_val("url") + tid + pg + self.get_rule_val("houzhui")
+            
+            # 构建URL
+            web_url = self._build_category_url(tid, pg, extend)
+            
             html = self.fetch(web_url)
             parse_content = html
 
@@ -113,11 +201,23 @@ class XBiubiu(Spider):
                     print(f"Parse video error: {e}")
                     continue
 
+            # 计算页码
+            page_count = 9999
+            total = 99999
+            
+            # 尝试从HTML中提取页码信息
+            page_info = self.sub_content(html, self.get_rule_val("pagecountqian", ""), self.get_rule_val("pagecounthou", ""))
+            if page_info:
+                try:
+                    page_count = int(page_info[0])
+                except:
+                    pass
+
             return {
                 "page": pg,
-                "pagecount": 9999,
+                "pagecount": page_count,
                 "limit": 90,
-                "total": 99999,
+                "total": total,
                 "list": videos
             }
         except Exception as e:
